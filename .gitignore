@@ -4,7 +4,7 @@ __pycache__/
 *$py.class
 
 # tensor log files
-**/logs
+**/logs/
 
 # C extensions
 *.so
