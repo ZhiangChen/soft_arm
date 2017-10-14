@@ -30,7 +30,7 @@ void PoseSubscriber::publish_poses(double rate)
     _status3 = false;
     _status4 = false;
     ros::Rate(rate).sleep();
-    std::cout<<'.';
+    ROS_INFO(".");
     _pub.publish(_n_ps);
 }
 
