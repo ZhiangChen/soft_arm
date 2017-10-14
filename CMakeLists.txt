@@ -35,5 +35,5 @@ add_library(
 soft_arm src/PoseSubscriber.cpp
 )
 
-add_executable(test_main src/test_main.cpp)
-target_link_libraries(test_main soft_arm ${catkin_LIBRARIES})
+add_executable(read_mocap src/read_mocap.cpp)
+target_link_libraries(read_mocap soft_arm ${catkin_LIBRARIES})
