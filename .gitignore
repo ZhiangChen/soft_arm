@@ -12,6 +12,9 @@ __pycache__/
 # ipython
 **/.ipynb_checkpoints
 
+# other files
+**/.idea
+
 # C extensions
 *.so
 
