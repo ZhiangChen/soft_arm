@@ -18,9 +18,22 @@ add_service_files(FILES OneSeg.srv)
 generate_messages(DEPENDENCIES std_msgs geometry_msgs)
 
 ## Declare a catkin package
-catkin_package()
+catkin_package(
+INCLUDE_DIRS include
+LIBRARIES PoseSubscriber
+)
 
 ## Build talker and listener
-include_directories(include ${catkin_INCLUDE_DIRS})
+#include_directories(include ${catkin_INCLUDE_DIRS})
+include_directories(
+  include
+  ${catkin_INCLUDE_DIRS}
+  ${soft_arm_INCLUDE_DIRS}
+)
 
+add_library(
+soft_arm src/PoseSubscriber.cpp
+)
 
+add_executable(test_main src/test_main.cpp)
+target_link_libraries(test_main soft_arm ${catkin_LIBRARIES})
