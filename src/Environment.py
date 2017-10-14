@@ -11,7 +11,7 @@ from geometry_msgs.msg import PoseStamped as PS
 
 class Env(object):
     """
-    Env receives states from motion capture systems.
+    Env receives states.
     ***State:***
     (1) Static control:
         - poses of rigid bodies on the soft arm

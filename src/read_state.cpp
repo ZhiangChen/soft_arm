@@ -1,14 +1,14 @@
 #include <ros/ros.h>
-#include <soft_arm/PoseSubscriber.h>
+#include <soft_arm/StateSubscriber.h>
 #include <geometry_msgs/PoseStamped.h>
 
 int main(int argc, char **argv)
 {
-    ros::init(argc,argv,"read_mocap");
+    ros::init(argc,argv,"read_states");
     ros::NodeHandle nh;
-    PoseSubscriber ps(&nh);
+    StateSubscriber ss(&nh);
     while (ros::ok())
     {
-        ps.publish_poses(10);
+        ss.publish_state(10);
     }
 }

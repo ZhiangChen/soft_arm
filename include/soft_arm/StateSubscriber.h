@@ -5,11 +5,11 @@
 #include <geometry_msgs/PoseArray.h>
 #include <ros/ros.h>
 
-class PoseSubscriber
+class StateSubscriber
 {
 public:
-    PoseSubscriber(ros::NodeHandle* nodehandle);
-    void publish_poses(double timestep);
+    StateSubscriber(ros::NodeHandle* nodehandle);
+    void publish_state(double timestep);
 
 private:
     ros::NodeHandle _nh;
@@ -17,6 +17,7 @@ private:
     ros::Subscriber _sub2;
     ros::Subscriber _sub3;
     ros::Subscriber _sub4;
+    ros::Subscriber _sub5;
     ros::Publisher _pub;
     geometry_msgs::PoseArray _n_ps;
 
@@ -24,10 +25,12 @@ private:
     bool _status2;
     bool _status3;
     bool _status4;
+    bool _status5;
     void _callback1(const geometry_msgs::PoseStamped& ps);
     void _callback2(const geometry_msgs::PoseStamped& ps);
     void _callback3(const geometry_msgs::PoseStamped& ps);
     void _callback4(const geometry_msgs::PoseStamped& ps);
+    void _callback5(const geometry_msgs::PoseStamped& ps);
 
 };
 

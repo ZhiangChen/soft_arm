@@ -20,7 +20,7 @@ generate_messages(DEPENDENCIES std_msgs geometry_msgs)
 ## Declare a catkin package
 catkin_package(
 INCLUDE_DIRS include
-LIBRARIES PoseSubscriber
+LIBRARIES StateSubscriber
 )
 
 ## Build talker and listener
@@ -32,8 +32,8 @@ include_directories(
 )
 
 add_library(
-soft_arm src/PoseSubscriber.cpp
+soft_arm src/StateSubscriber.cpp
 )
 
-add_executable(read_mocap src/read_mocap.cpp)
-target_link_libraries(read_mocap soft_arm ${catkin_LIBRARIES})
+add_executable(read_state src/read_state.cpp)
+target_link_libraries(read_state soft_arm ${catkin_LIBRARIES})
