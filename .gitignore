@@ -6,6 +6,12 @@ __pycache__/
 # tensor log files
 **/logs/
 
+# data
+**/MNIST_data/
+
+# ipython
+**/.ipynb_checkpoints
+
 # C extensions
 *.so
 
