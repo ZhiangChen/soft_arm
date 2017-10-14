@@ -14,7 +14,7 @@ StateSubscriber::StateSubscriber(ros::NodeHandle* nodehandle): _nh(*nodehandle)
     _status5 = false;
     ROS_INFO("Initialized Subscribers");
 
-    _pub = _nh.advertise<geometry_msgs::PoseArray>("robot_poses", 1, true);
+    _pub = _nh.advertise<geometry_msgs::PoseArray>("raw_agent_state", 1, true);
     ROS_INFO("Initialized Publisher");
 
     _n_ps.poses.resize(5);

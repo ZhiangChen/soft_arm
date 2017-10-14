@@ -9,7 +9,7 @@ def talker():
     pub3 = rospy.Publisher('Robot_3/pose', PS, queue_size=10)
     pub4 = rospy.Publisher('Robot_4/pose', PS, queue_size=10)
     rospy.init_node('naive_pose_pub', anonymous=True)
-    rate = rospy.Rate(10)  # 10hz
+    rate = rospy.Rate(50)  # 50hz
     ps1 = PS()
     ps2 = PS()
     ps3 = PS()

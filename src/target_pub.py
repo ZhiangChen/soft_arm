@@ -6,7 +6,7 @@ from geometry_msgs.msg import PoseStamped as PS
 def talker():
     pub1 = rospy.Publisher('Robot_5/pose', PS, queue_size=10)
     rospy.init_node('target_pub', anonymous=True)
-    rate = rospy.Rate(10)  # 10hz
+    rate = rospy.Rate(50)  # 50hz
     ps1 = PS()
     ps1.pose.position.x = 5.0
     ps1.pose.position.y = 5.1
