@@ -1,4 +1,4 @@
-# Nodes
+## Nodes
 ### 1. read_state
 `bash
 rosrun soft_arm read_state
@@ -14,9 +14,17 @@ It publishes the target position with the message type of geometry_msgs/PoseStam
 It publishes actions to low-level controller. It has three usages:
 - `python run_action.py` publishes default air pressure {x:20,y:20,z:0}
 - `python run_action.py 10 10 10` publishes three channels of air pressure
-- `python run_action.py all` run entire actions in action space. And when the action is done, it will be published to a topic "action" with the message type of geometry_msgs/Vector3
+- `python run_action.py all` runs entire actions in action space. And when the action is done, it will be published to a topic "action" with the message type of geometry_msgs/Vector3
 
 ### 5. action_state_recorder.py
 It listens to 'agent_state' to get state information (robot pose + target position) and 'action' from run_action.py. It writes action-state pair to a file 'action_state_data'. See [the code](https://github.com/ZhiangChen/soft_arm/blob/master/src/action_state_recorder.py#L32) for more information about the data structure.
  
-# Libraries
+## Libraries
+### 1. StateSubscriber
+`c++
+ StateSubscriber(ros::NodeHandle* nodehandle);
+ void set_normalizer(double x, double y, double z, double s);
+ void publish_state(double rate);
+`
+
+### 2. ASRecorder
