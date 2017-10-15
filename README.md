@@ -1,6 +1,7 @@
 
 ### 1. example_nets
 Some usage examples of neural networks that might be used.
+- [batch normalization network](https://github.com/ZhiangChen/soft_arm/blob/master/example_nets/batch_normalization_example.ipynb)
 
 ### 2. labview
 Low-level controller on Labview.
