@@ -22,9 +22,9 @@ It listens to 'agent_state' to get state information (robot pose + target positi
 ## Libraries
 ### 1. StateSubscriber
 `
- StateSubscriber(ros::NodeHandle* nodehandle);
- void set_normalizer(double x, double y, double z, double s);
- void publish_state(double rate);
+StateSubscriber(ros::NodeHandle* nodehandle);
+void set_normalizer(double x, double y, double z, double s);
+void publish_state(double rate);
 `
 
 ### 2. ASRecorder
