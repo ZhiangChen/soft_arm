@@ -46,12 +46,28 @@ def talker():
     ps4.pose.orientation.z = 0.6
     ps4.pose.orientation.w = 0.7
     ps4.header.frame_id = "raw"
+    x = 100000000000.0
+    y = 100000000000.0
+    z = 100000000000.0
+    w = 100000000000.0
     while not rospy.is_shutdown():
         rospy.loginfo('.')
+        ps1.pose.position.x = x
+        ps1.pose.position.y = y
+        ps1.pose.position.z = z
+        ps1.pose.orientation.x = x
+        ps1.pose.orientation.y = y
+        ps1.pose.orientation.z = z
+        ps1.pose.orientation.w = w
+        ps1.header.frame_id = "raw"
         pub1.publish(ps1)
-        pub2.publish(ps2)
-        pub3.publish(ps3)
-        pub4.publish(ps4)
+        pub2.publish(ps1)
+        pub3.publish(ps1)
+        pub4.publish(ps1)
+        #x = x*0.999
+        #y = y*0.999
+        #z = z*0.999
+        #w = w*0.999
         rate.sleep()
 
 
