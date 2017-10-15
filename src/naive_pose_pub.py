@@ -52,6 +52,7 @@ def talker():
     w = 100000000000.0
     while not rospy.is_shutdown():
         rospy.loginfo('Publishing naive pose...')
+        """
         ps1.pose.position.x = x
         ps1.pose.position.y = y
         ps1.pose.position.z = z
@@ -60,10 +61,11 @@ def talker():
         ps1.pose.orientation.z = z
         ps1.pose.orientation.w = w
         ps1.header.frame_id = "raw"
+        """
         pub1.publish(ps1)
-        pub2.publish(ps1)
-        pub3.publish(ps1)
-        pub4.publish(ps1)
+        pub2.publish(ps2)
+        pub3.publish(ps3)
+        pub4.publish(ps4)
         #x = x*0.999
         #y = y*0.999
         #z = z*0.999
