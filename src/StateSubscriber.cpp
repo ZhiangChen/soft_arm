@@ -39,7 +39,7 @@ void StateSubscriber::publish_state(double rate)
     _status4 = false;
     _status5 = false;
     ros::Rate(rate).sleep();
-    ROS_INFO(".");
+    ROS_INFO("Publishing state...");
     _pub.publish(_n_ps);
 }
 

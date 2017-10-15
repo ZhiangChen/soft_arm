@@ -4,7 +4,7 @@
 
 int main(int argc, char **argv)
 {
-    ros::init(argc,argv,"read_states");
+    ros::init(argc,argv,"read_state");
     ros::NodeHandle nh;
     StateSubscriber ss(&nh);
     while (ros::ok())

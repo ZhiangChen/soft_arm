@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<launch>
+	<node name="read_state" pkg="soft_arm" type="read_state" output="screen"/>
+	<node name="target_pub" pkg="soft_arm" type="target_pub.py" output="screen"/>
+	<node name="naive_pose_pub" pkg="soft_arm" type="naive_pose_pub.py" output="screen"/>
+</launch>

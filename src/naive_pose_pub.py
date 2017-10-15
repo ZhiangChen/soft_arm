@@ -51,7 +51,7 @@ def talker():
     z = 100000000000.0
     w = 100000000000.0
     while not rospy.is_shutdown():
-        rospy.loginfo('.')
+        rospy.loginfo('Publishing naive pose...')
         ps1.pose.position.x = x
         ps1.pose.position.y = y
         ps1.pose.position.z = z

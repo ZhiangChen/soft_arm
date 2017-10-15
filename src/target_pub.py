@@ -17,7 +17,7 @@ def talker():
     ps1.pose.orientation.w = 0.7
     ps1.header.frame_id = "raw"
     while not rospy.is_shutdown():
-        rospy.loginfo('.')
+        rospy.loginfo('Publishing target...')
         pub1.publish(ps1)
         rate.sleep()
 
