@@ -7,6 +7,8 @@ MIT License
 """
 import tensorflow as tf
 import numpy as np
+import os
+os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
 
 
 class DDPG(object):
@@ -53,13 +55,6 @@ class DDPG(object):
         with tf.variable_scope('Critic'):
             q = self._build_c(self.S, self.a, scope='eval', trainable=True)
             q_ = self._build_c(self.S_, a_, scope='target', trainable=False)
-        with tf.name_scope('Optimizer'):
-            with tf.variable_scope('loss'):
-                q_target = self.R + GAMMA * q_
-                td_error = tf.losses.mean_squared_error(labels=q_target, predictions=q)
-                a_loss = - tf.reduce_mean(q)  # maximize the q
-            self.ctrain = tf.train.AdamOptimizer(self.lr_c).minimize(td_error, var_list=self.ce_params)
-            self.atrain = tf.train.AdamOptimizer(self.lr_a).minimize(a_loss, var_list=self.ae_params)
 
         # networks parameters
         self.ae_params = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='Actor/eval')
@@ -70,6 +65,15 @@ class DDPG(object):
         # target net replacement
         self.soft_replace = [[tf.assign(ta, (1 - self.tau) * ta + self.tau * ea), tf.assign(tc, (1 - self.tau) * tc + self.tau * ec)]
                              for ta, ea, tc, ec in zip(self.at_params, self.ae_params, self.ct_params, self.ce_params)]
+
+        # set optimizer
+        with tf.name_scope('Optimizer'):
+            with tf.variable_scope('loss'):
+                q_target = self.R + self.gamma * q_
+                td_error = tf.losses.mean_squared_error(labels=q_target, predictions=q)
+                a_loss = - tf.reduce_mean(q)  # maximize the q
+            self.ctrain = tf.train.AdamOptimizer(self.lr_c).minimize(td_error, var_list=self.ce_params)
+            self.atrain = tf.train.AdamOptimizer(self.lr_a).minimize(a_loss, var_list=self.ae_params)
 
         self.sess.run(tf.global_variables_initializer())
 
