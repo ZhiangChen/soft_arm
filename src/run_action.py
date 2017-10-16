@@ -1,5 +1,10 @@
 #!/usr/bin/env python
- 
+"""
+run_action.py
+Zhiang Chen, Oct 15, 2017
+
+MIT License
+"""
 import sys
 import rospy
 from soft_arm.srv import *

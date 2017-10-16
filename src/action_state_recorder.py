@@ -1,5 +1,10 @@
 #!/usr/bin/env python
+"""
+action_state_recorder.py
+Zhiang Chen, Oct 15, 2017
 
+MIT License
+"""
 import rospy
 from geometry_msgs.msg import PoseArray as PA
 from geometry_msgs.msg import Vector3
