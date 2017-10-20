@@ -14,6 +14,7 @@ __pycache__/
 
 # other files
 **/.idea/
+**/.ipynb_checkpoints/
 
 # C extensions
 *.so
