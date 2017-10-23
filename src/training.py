@@ -5,6 +5,10 @@
 - Training DDPG
 - Publishing action
 """
+""" to-do
+- sampled target normalization
+
+"""
 
 from ddpg import *
 import rospy
@@ -17,7 +21,7 @@ import pickle
 
 
 MAX_EPISODES = 200
-MAX_EP_STEPS = 200
+MAX_EP_STEPS = 10
 
 np.random.seed(1)
 tf.set_random_seed(1)
@@ -36,9 +40,10 @@ class Trainer():
         self.current_ep = 0
         self.current_step = 0
         self.current_action = np.array([.0, .0, .0])
-        self.done = True
+        self.done = True # if the episode is done
         self.var = 3.0
-        self.updated = False
+        self.updated = False # if s_ is updated
+        self.stored = False # if experience is stored and reward is computed
 
         """ Setting communication"""
         self.sub1 = rospy.Subscriber('agent_state', PA, self.callback1, queue_size=1)
@@ -49,11 +54,10 @@ class Trainer():
         self.action_V3 = Vector3()
 
         """ Reading targets """
-        aoe = pickle.load(open('action_origin_end.p', 'rb'))
-        r_data = aoe['random']
-        rs_data = aoe['random_step']
-        self.r_ends = r_data[:, 2, :]
-        self.rs_ends = rs_data[:, 2, :]
+        """ The data should be w.r.t origin by base position """
+        ends = pickle.load(open('ends.p', 'rb'))
+        self.r_ends = ends['r_ends']
+        self.rs_ends = ends['rs_ends']
 
         """Initializing target"""
         self.pub1.publish(self.sample_target())
@@ -108,21 +112,36 @@ class Trainer():
                     self.ddpg.learn()
 
                 self.current_step += 1
+                while not self.stored:
+                    rospy.sleep(0.1)
+                self.stored = False
+                self.ep_reward += self.reward
 
                 if self.reward > GOT_GOAL:
                     self.done = True
                     self.current_step = 0
                     self.current_ep += 1
-                    print "Reach Target"
+                    self.sample_target()
+                    print "Target Reached"
+                    print("Episode %i Ended" % self.current_ep)
+                    print('Episode:', i, ' Reward: %i' % int(self.ep_reward), 'Explore: %.2f' % self.var,)
+                    self.ep_reward = 0
+                    self.pub1.publish(self.target_PS)
+                    break
 
                 else:
                     self.done = False
+                    self.pub1.publish(self.target_PS)
 
                 if self.current_step == MAX_EP_STEPS:
+                    print "Target Failed"
+                    print("Episode %i Ends" % self.current_ep)
+                    print('Episode:', i, ' Reward: %i' % int(self.ep_reward), 'Explore: %.2f' % self.var,)
                     self.current_step = 0
                     self.current_ep += 1
-
-
+                    self.sample_target()
+                    self.ep_reward = 0
+                    self.pub1.publish(self.target_PS)
 
 
     def callback2(self, pa):
@@ -132,39 +151,16 @@ class Trainer():
         self.s_ = np.array(n_px + n_py + n_pz)
         if self.updated:
             self.updated = False
+            self.stored = True
             self.compute_reward()
             self.ddpg.store_transition(self.s, self.current_action, self.reward, self.s_)
 
 
 
-
-
-
-
-
-var = 3.0  # control exploration
-for i in range(MAX_EPISODES):
-    s = env.reset()
-    ep_reward = 0
-
-    for j in range(MAX_EP_STEPS):
-        if RENDER:
-            env.render()
-
-        # Add exploration noise
-        a = ddpg.choose_action(s)
-        a = np.clip(np.random.normal(a, var), -2, 2)    # add randomness to action selection for exploration
-        s_, r, done, info = env.step(a)
-
-        ddpg.store_transition(s, a, r / 10, s_)
-
-        if ddpg.pointer > ddpg.memory_capacity:
-            var *= .9999    # decay the action randomness
-            ddpg.learn()
-
-        s = s_
-        ep_reward += r
-        if j == MAX_EP_STEPS-1:
-            print('Episode:', i, ' Reward: %i' % int(ep_reward), 'Explore: %.2f' % var, )
-            if ep_reward > -300:RENDER = True
-            break
+if __name__ == '__main__':
+    rospy.init_node('trainer',anonymous=True)
+    trainer = Trainer()
+try:
+    rospy.spin()
+except KeyboardInterrupt:
+    print("Shutting down ROS node trainer")

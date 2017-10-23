@@ -12,6 +12,12 @@ r_origin = np.average(r_origins,axis=0)
 rs_origin = np.average(rs_origins,axis=0)
 all_origins = np.concatenate((r_origins,rs_origins))
 origin = np.average(all_origins,axis=0)
+
+r_ends_0 = r_ends - r_origin
+rs_ends_0 = rs_ends - rs_origin
+ends = {'r_ends':r_ends_0, 'rs_ends': rs_ends_0}
+with open("ends.p", 'wb') as wfp:
+    pickle.dump(ends, wfp)
 print origin
 print '*'*40
 
