@@ -22,7 +22,7 @@ class DDPG(object):
     - choose action
     - store transition
     """
-    def __init__(self, lr_a=0.001, lr_c=0.002, gamma=0.99, tau=0.01, batch_size=32, a_dim=3, s_dim=31, a_bound=5,
+    def __init__(self, lr_a=0.001, lr_c=0.002, gamma=0.99, tau=0.01, batch_size=16, a_dim=3, s_dim=31, a_bound=5,
                  memory_capacity=10000):
         """
         :param lr_a: learning rate of actor
