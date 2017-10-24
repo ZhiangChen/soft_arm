@@ -28,6 +28,9 @@ import pickle
 
 MAX_EPISODES = 200
 MAX_EP_STEPS = 10
+X_OFFSET =
+Y_OFFSET =
+Z_OFFSET =
 
 np.random.seed(1)
 tf.set_random_seed(1)
@@ -72,9 +75,9 @@ class Trainer():
         ends = pickle.load(open('ends.p', 'rb'))
         self.r_ends = ends['r_ends']
         self.rs_ends = ends['rs_ends']
-        self.x_offset = 0.03168
-        self.y_offset = -0.3733
-        self.z_offset = 0.03285
+        self.x_offset = X_OFFSET
+        self.y_offset = Y_OFFSET
+        self.z_offset = Z_OFFSET
         self.scaler = 1/0.3
         self.sample_target()
         print("Read target data")
