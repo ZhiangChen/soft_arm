@@ -1,6 +1,7 @@
 import pickle
 import numpy as np 
 
+Normalizer = 1/0.3
 aoe = pickle.load(open('action_origin_end.p','rb'))
 r_data = aoe['random']
 rs_data = aoe['random_step']
@@ -30,10 +31,10 @@ new_rs_ends = rs_ends - rs_origin
 print r_origin
 print rs_origin
 print '*'*40
-print np.max(new_r_ends,axis=0)
-print np.max(new_rs_ends,axis=0)
-print np.min(new_r_ends,axis=0)
-print np.min(new_rs_ends,axis=0)
+print np.max(new_r_ends,axis=0)*Normalizer
+print np.max(new_rs_ends,axis=0)*Normalizer
+print np.min(new_r_ends,axis=0)*Normalizer
+print np.min(new_rs_ends,axis=0)*Normalizer
 
 r_space = np.max(new_r_ends,axis=0) - np.min(new_r_ends,axis=0)
 rs_space = np.max(new_rs_ends,axis=0) - np.min(new_rs_ends,axis=0)
@@ -55,7 +56,7 @@ print np.min(new_rs_ends,axis=0)
 print '*'*40
 print 'Normalized results:'
 
-Normalizer = 1/0.3
+
 new_r_ends = Normalizer * new_r_ends
 new_rs_ends = Normalizer * new_rs_ends
 print np.max(new_r_ends,axis=0)

@@ -16,10 +16,13 @@ StateSubscriber::StateSubscriber(ros::NodeHandle* nodehandle): _nh(*nodehandle)
     ROS_INFO("Initialized Subscribers");
 
     _pub = _nh.advertise<geometry_msgs::PoseArray>("agent_state", 1, true);
+    _pub1 = _nh.advertise<geometry_msgs::PoseArray>("robot_pose", 1, true);
     ROS_INFO("Initialized Publisher");
 
     _n_ps.poses.resize(5);
     _n_ps.header.frame_id = "raw_data";
+
+    _n_ps1.poses.resize(4);
 
     _x = 0;
     _y = 0;
@@ -41,6 +44,21 @@ void StateSubscriber::publish_state(double rate)
     ros::Rate(rate).sleep();
     ROS_INFO("Publishing state...");
     _pub.publish(_n_ps);
+}
+
+void StateSubscriber::publish_poses(double rate)
+{
+    while((!_status1 || !_status2 || !_status3 || !_status4) && ros::ok())
+    {
+        ros::spinOnce();
+    }
+    _status1 = false;
+    _status2 = false;
+    _status3 = false;
+    _status4 = false;
+    ros::Rate(rate).sleep();
+    ROS_INFO("Publishing poses...");
+    _pub1.publish(_n_ps1);
 }
 
 bool StateSubscriber::_is_valid(geometry_msgs::Pose p)
@@ -84,6 +102,7 @@ void StateSubscriber::_callback1(const geometry_msgs::PoseStamped& ps)
         {
             _pose1.pop_front();
             _n_ps.poses[0] = _average(_pose1);
+            _n_ps1.poses[0] = _average(_pose1);
             _status1 = true;
         }
     }
@@ -99,6 +118,7 @@ void StateSubscriber::_callback2(const geometry_msgs::PoseStamped& ps)
         {
             _pose2.pop_front();
             _n_ps.poses[1] = _average(_pose2);
+            _n_ps1.poses[1] = _average(_pose2);
             //ROS_INFO("%f", _n_ps.poses[1].position.x);
             _status2 = true;
         }
@@ -115,6 +135,7 @@ void StateSubscriber::_callback3(const geometry_msgs::PoseStamped& ps)
         {
             _pose3.pop_front();
             _n_ps.poses[2] = _average(_pose3);
+            _n_ps1.poses[2] = _average(_pose3);
             _status3 = true;
         }
     }
@@ -130,6 +151,7 @@ void StateSubscriber::_callback4(const geometry_msgs::PoseStamped& ps)
         {
             _pose4.pop_front();
             _n_ps.poses[3] = _average(_pose4);
+            _n_ps1.poses[3] = _average(_pose4);
             _status4 = true;
         }
     }

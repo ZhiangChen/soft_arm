@@ -13,6 +13,7 @@ public:
     StateSubscriber(ros::NodeHandle* nodehandle);
     void set_normalizer(double x, double y, double z, double s);
     void publish_state(double timestep);
+    void publish_poses(double timestep);
 
 private:
     ros::NodeHandle _nh;
@@ -22,7 +23,9 @@ private:
     ros::Subscriber _sub4;
     ros::Subscriber _sub5;
     ros::Publisher _pub;
+    ros::Publisher _pub1;
     geometry_msgs::PoseArray _n_ps;
+    geometry_msgs::PoseArray _n_ps1;
 
     double _x;
     double _y;

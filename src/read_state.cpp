@@ -9,6 +9,6 @@ int main(int argc, char **argv)
     StateSubscriber ss(&nh);
     while (ros::ok())
     {
-        ss.publish_state(25);
+        ss.publish_poses(25);
     }
 }
