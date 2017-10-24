@@ -21,6 +21,8 @@ from geometry_msgs.msg import PoseArray as PA
 from geometry_msgs.msg import Vector3
 from geometry_msgs.msg import PoseStamped as PS
 from soft_arm.srv import *
+from sensor_msgs.msg import PointCloud as PC
+from geometry_msgs.msg import Point
 import pickle
 
 
@@ -52,9 +54,13 @@ class Trainer():
         self.sub1 = rospy.Subscriber('robot_pose', PA, self.callback1, queue_size=1)
         self.sub2 = rospy.Subscriber('robot_pose', PA, self.callback2, queue_size=1)
         self.pub1 = rospy.Publisher('Robot_5/pose', PS, queue_size=10)
+        self.pub2 = rospy.Publisher('normalized_state', PC, queue_size=10)
         rospy.wait_for_service('airpress_control', timeout=5)
         self.target_PS = PS()
         self.action_V3 = Vector3()
+        self.pc = PC()
+        self.pc.header.frame_id = 'world'
+        self.state = PA()
         self.updated = False # if s_ is updated
         self.stored = True # if experience is stored and reward is computed
         self.got_callback1 = False
@@ -105,12 +111,28 @@ class Trainer():
         error = target - end
         self.reward = -np.linalg.norm(error)*10
 
+    def pub_state(self, n_px, n_py, n_pz, n_t):
+        pts = list()
+        for i in range(4):
+            pt = Point()
+            pt.x = n_px[i]
+            pt.y = n_py[i]
+            pt.z = n_pz[i]
+            pts.append(pt)
+        pt = Point()
+        pt.x, pt.y, pt.z = n_t[0], n_t[1], n_t[2]
+        pts.append(pt)
+        self.pc.points = pts
+        self.pub2.publish(self.pc)
+
+
     def callback1(self, pa):
         n_px = (np.array([pa.poses[i].position.x for i in range(4)]) - self.x_offset)*self.scaler
         n_py = (np.array([pa.poses[i].position.y for i in range(4)]) - self.y_offset)*self.scaler
         n_pz = (np.array([pa.poses[i].position.z for i in range(4)]) - self.z_offset)*self.scaler
         n_t = self.target*self.scaler
         self.s = np.concatenate((n_px, n_py, n_pz, n_t))
+        self.pub_state(n_px,n_py,n_pz,n_t)
         print("Current: ")
         print n_px[3], n_py[3], n_pz[3]
         print("Target: ")
