@@ -31,20 +31,22 @@ MAX_EP_STEPS = 10
 X_OFFSET =
 Y_OFFSET =
 Z_OFFSET =
-
-np.random.seed(1)
-tf.set_random_seed(1)
-
-
 S_DIM = 15
 A_DIM = 3
 A_BOUND = 5
 GOT_GOAL = -10
 
+
+np.random.seed(1)
+tf.set_random_seed(1)
+
+
+
+
 class Trainer():
     def __init__(self):
         """ Initializing DDPG """
-        self.ddpg = DDPG(a_dim=A_DIM, a_bound=A_BOUND, s_dim=S_DIM, memory_capacity=500)
+        self.ddpg = DDPG(a_dim=A_DIM, s_dim=S_DIM, memory_capacity=500)
         self.ep_reward = 0
         self.current_ep = 0
         self.current_step = 0
@@ -82,10 +84,12 @@ class Trainer():
         self.sample_target()
         print("Read target data")
 
+        """
         while not (rospy.is_shutdown()):
             self.pub1.publish(self.target_PS)
             #print('pub')
             rospy.sleep(0.1)
+        """
 
 
     def sample_target(self, e=0.6):
@@ -143,7 +147,7 @@ class Trainer():
         if self.current_ep < MAX_EPISODES:
             if self.current_step < MAX_EP_STEPS:
                 if self.stored:
-                    delta_a = self.ddpg.choose_action(self.s)
+                    delta_a = self.ddpg.choose_action(self.s)*A_BOUND
                     delta_a = np.random.normal(delta_a,self.var)
                     self.current_action += delta_a
                     self.current_action = np.clip(self.current_action, 0, 40)
@@ -169,7 +173,7 @@ class Trainer():
             self.updated = False
             self.compute_reward()
             self.ddpg.store_transition(self.s, self.current_action, self.reward, self.s_)
-            print("Memory stored")
+            print("Experience stored")
 
             if self.ddpg.pointer > self.ddpg.memory_capacity:
                 self.var *= 0.9999
@@ -188,6 +192,7 @@ class Trainer():
                 print('Episode:', self.current_ep, ' Reward: %i' % int(self.ep_reward), 'Explore: %.2f' % self.var,)
                 print('*'*40)
                 self.ep_reward = 0
+                self.ddpg.save_memory()
 
             else:
                 self.done = False
@@ -200,7 +205,8 @@ class Trainer():
                     self.current_ep += 1
                     self.sample_target()
                     self.ep_reward = 0
-            self.pub1.publish(self.target_PS)
+                    self.ddpg.save_memory()
+            #self.pub1.publish(self.target_PS)
             self.stored = True
             print('\n')
 

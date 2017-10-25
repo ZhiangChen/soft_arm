@@ -23,7 +23,7 @@ class DDPG(object):
     - choose action
     - store transition
     """
-    def __init__(self, lr_a=0.001, lr_c=0.002, gamma=0.99, tau=0.01, batch_size=16, a_dim=3, s_dim=31, a_bound=5,
+    def __init__(self, lr_a=0.001, lr_c=0.002, gamma=0.99, tau=0.01, batch_size=16, a_dim=3, s_dim=31,
                  memory_capacity=10000):
         """
         :param lr_a: learning rate of actor
@@ -43,7 +43,7 @@ class DDPG(object):
         self.pointer = 0 # memory pointer
         self.sess = tf.Session()
 
-        self.a_dim, self.s_dim, self.a_bound = a_dim, s_dim, a_bound
+        self.a_dim, self.s_dim = a_dim, s_dim
 
         self.S = tf.placeholder(tf.float32, [None, s_dim], 's')
         self.S_ = tf.placeholder(tf.float32, [None, s_dim], 's_')
@@ -144,8 +144,7 @@ class DDPG(object):
             #bn2 = tf.layers.batch_normalization(hidden1, axis=-1, training=self.is_training, name='bn2', trainable=trainable)
             hidden2 = tf.layers.dense(hidden1, 10, activation=tf.nn.relu, name='fc2', trainable=trainable, kernel_initializer=tf.contrib.layers.xavier_initializer())
             scaled_a = tf.layers.dense(hidden2, self.a_dim, activation=tf.nn.tanh, name='scaled_a', trainable=trainable, kernel_initializer=tf.contrib.layers.xavier_initializer())
-            a = tf.multiply(scaled_a, self.a_bound, name='a')
-            return a
+            return scaled_a
 
 
     def _build_c(self, s, a, scope, trainable):
