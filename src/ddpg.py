@@ -89,7 +89,10 @@ class DDPG(object):
         # soft target replacement
         self.sess.run(self.soft_replace)
 
-        indices = np.random.choice(self.memory_capacity, size=self.batch_size)
+        if self.pointer > self.memory_capacity:
+            indices = np.random.choice(self.memory.shape[0], size=self.batch_size)
+        else:
+            indices = np.random.choice(self.pointer, size=self.batch_size)
         bt = self.memory[indices, :]
         bs = bt[:, :self.s_dim]
         ba = bt[:, self.s_dim: self.s_dim + self.a_dim]
@@ -124,18 +127,26 @@ class DDPG(object):
 
 
     def save_memory(self):
+        M = {"memory":self.memory, "pointer": self.pointer}
         with open("memory.p", 'wb') as wfp:
-            pickle.dump(self.memory, wfp)
+            pickle.dump(M, wfp)
+        print("Saved memory")
+        print("Pointer location: " + str(self.pointer))
 
     def save_model(self):
         save_path = self.saver.save(self.sess, "./model/model.ckpt")
         print("Model saved in file: %s" % save_path)
 
     def restore_model(self):
+        print("Restored model")
         self.saver.restore(self.sess, "./model/model.ckpt")
 
     def restore_momery(self):
-        self.memory = pickle.load(open('memory.p', 'rb'))
+        M = pickle.load(open('memory.p', 'rb'))
+        self.memory = M["memory"]
+        self.pointer = M["pointer"]
+        print("Restored memory")
+        print("Pointer location: %i" % self.pointer)
 
     def _build_a(self, s, scope, trainable):
         with tf.variable_scope(scope):

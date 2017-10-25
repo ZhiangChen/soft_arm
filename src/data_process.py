@@ -5,6 +5,21 @@ Normalizer = 1/0.3
 aoe = pickle.load(open('action_origin_end.p','rb'))
 r_data = aoe['random']
 rs_data = aoe['random_step']
+
+cut_r_data = []
+cut_rs_data = []
+for d in r_data:
+    if all(d[0,:]<26):
+        cut_r_data.append(d)
+
+for d in rs_data:
+    if all(d[0, :] < 26):
+        cut_rs_data.append(d)
+
+r_data = np.array(cut_r_data)
+rs_data = np.array(cut_rs_data)
+
+
 r_origins = r_data[:,1,:]
 r_ends = r_data[:,2,:]
 rs_origins = rs_data[:,1,:]
@@ -19,6 +34,8 @@ rs_ends_0 = rs_ends - rs_origin
 ends = {'r_ends':r_ends_0, 'rs_ends': rs_ends_0}
 with open("ends.p", 'wb') as wfp:
     pickle.dump(ends, wfp)
+print r_ends_0.shape
+print rs_ends_0.shape
 print origin
 print '*'*40
 
