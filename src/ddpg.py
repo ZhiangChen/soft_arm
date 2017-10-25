@@ -8,6 +8,7 @@ MIT License
 import tensorflow as tf
 import numpy as np
 import os
+import pickle
 os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
 
 
@@ -75,6 +76,7 @@ class DDPG(object):
             self.ctrain = tf.train.AdamOptimizer(self.lr_c).minimize(td_error, var_list=self.ce_params)
             self.atrain = tf.train.AdamOptimizer(self.lr_a).minimize(a_loss, var_list=self.ae_params)
 
+        self.saver = tf.train.Saver()
         self.sess.run(tf.global_variables_initializer())
 
         tf.summary.FileWriter("logs/", self.sess.graph)
@@ -120,6 +122,20 @@ class DDPG(object):
         self.memory[index, :] = transition
         self.pointer += 1
 
+
+    def save_memory(self):
+        with open("memory.p", 'wb') as wfp:
+            pickle.dump(self.memory, wfp)
+
+    def save_model(self):
+        save_path = self.saver.save(self.sess, "./model/model.ckpt")
+        print("Model saved in file: %s" % save_path)
+
+    def restore_model(self):
+        self.saver.restore(self.sess, "./model/model.ckpt")
+
+    def restore_momery(self):
+        self.memory = pickle.load(open('memory.p', 'rb'))
 
     def _build_a(self, s, scope, trainable):
         with tf.variable_scope(scope):
