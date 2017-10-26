@@ -28,9 +28,9 @@ import pickle
 
 MAX_EPISODES = 200
 MAX_EP_STEPS = 10
-X_OFFSET = 0.1953
-Y_OFFSET = -0.2834
-Z_OFFSET = 0.0376
+X_OFFSET = 0.1728
+Y_OFFSET = -0.2916
+Z_OFFSET = 0.0373
 S_DIM = 15
 A_DIM = 3
 A_BOUND = 15
@@ -79,8 +79,8 @@ class Trainer():
         self.sample_target()
         print("Read target data")
 
-        self.ddpg.restore_momery()
-        self.ddpg.restore_model()
+        #self.ddpg.restore_momery()
+        #self.ddpg.restore_model()
 
         """
         while not (rospy.is_shutdown()):
@@ -159,75 +159,22 @@ class Trainer():
 
 
     def callback2(self, pa):
-        #print 'having c2'
-        n_px = (np.array([pa.poses[i].position.x for i in range(4)]) - self.x_offset) * self.scaler
-        n_py = (np.array([pa.poses[i].position.y for i in range(4)]) - self.y_offset) * self.scaler
-        n_pz = (np.array([pa.poses[i].position.z for i in range(4)]) - self.z_offset) * self.scaler
-        end = np.array((n_px[3], n_py[3], n_pz[3]))
-        n_t = self.target * self.scaler
-        self.s_ = np.concatenate((n_px, n_py, n_pz, n_t))
-        print("Current: ")
-        print n_px[3], n_py[3], n_pz[3]
-        print("Target: ")
-        print n_t
-        self.pub_state(n_px, n_py, n_pz, n_t)
-        if not self.updated: # True when action and new state require to be stored
-            self.compute_reward(end, n_t)
-            action = (self.current_action - A_BOUND)/30.0
-            print action
-            self.ddpg.store_transition(self.s, self.current_action, self.reward, self.s_)
-            #print("Experience stored")
+        if not self.updated:
+            #print 'having c2'
+            n_px = (np.array([pa.poses[i].position.x for i in range(4)]) - self.x_offset) * self.scaler
+            n_py = (np.array([pa.poses[i].position.y for i in range(4)]) - self.y_offset) * self.scaler
+            n_pz = (np.array([pa.poses[i].position.z for i in range(4)]) - self.z_offset) * self.scaler
+            end = np.array((n_px[3], n_py[3], n_pz[3]))
+            n_t = self.target * self.scaler
+            self.s_ = np.concatenate((n_px, n_py, n_pz, n_t))
+            print("Current: ")
+            print n_px[3], n_py[3], n_pz[3]
+            print("Target: ")
+            print n_t
+            self.pub_state(n_px, n_py, n_pz, n_t)
+            if not self.updated: # True when action and new state require to be stored
+                self.compute_reward(end, n_t)
 
-            if self.ddpg.pointer > TRAIN_POINT:
-                if (self.current_step % 2 == 0):
-                    self.var *= 0.995
-                    self.ddpg.learn()
-
-            self.current_step += 1
-            self.ep_reward += self.reward
-
-            if self.reward > GOT_GOAL:
-                self.done = True
-                self.current_step = 0
-                self.current_ep += 1
-                self.sample_target()
-                print "Target Reached"
-                print("Episode %i Ended" % self.current_ep)
-                print('Episode:', self.current_ep, ' Reward: %d' % self.ep_reward, 'Explore: %.2f' % self.var,)
-                print('*'*40)
-                self.ep_reward = 0
-                self.ddpg.save_memory()
-                self.ddpg.save_model()
-                """
-                self.current_action = np.array([.0, .0, .0])
-                self.action_V3.x, self.action_V3.y, self.action_V3.z \
-                    = self.current_action[0], self.current_action[1], self.current_action[2]
-                self.run_action(self.action_V3)
-                """
-                rospy.sleep(2.5)
-
-            else:
-                self.done = False
-                if self.current_step == MAX_EP_STEPS:
-                    print "Target Failed"
-                    print("Episode %i Ends" % self.current_ep)
-                    print('Episode:', self.current_ep, ' Reward: %d' % self.ep_reward, 'Explore: %.2f' % self.var,)
-                    print('*' * 40)
-                    self.current_step = 0
-                    self.current_ep += 1
-                    self.sample_target()
-                    self.ep_reward = 0
-                    self.ddpg.save_memory()
-                    self.ddpg.save_model()
-                    """
-                    self.current_action = np.array([.0, .0, .0])
-                    self.action_V3.x, self.action_V3.y, self.action_V3.z \
-                        = self.current_action[0], self.current_action[1], self.current_action[2]
-                    self.run_action(self.action_V3)
-                    """
-                    rospy.sleep(2.5)
-            self.updated = True
-            print('\n')
 
 
 if __name__ == '__main__':

@@ -34,8 +34,8 @@ for i in range(MAX_EPISODES):
     #if i == 100:
     #   ddpg.save_model()
     #    ddpg.save_memory()
-    ddpg.restore_momery()
-    ddpg.restore_model()
+    #ddpg.restore_momery()
+    #ddpg.restore_model()
 
     for j in range(MAX_EP_STEPS):
         if RENDER & (i%5==0):
