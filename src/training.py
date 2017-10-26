@@ -62,8 +62,7 @@ class Trainer():
         self.pc = PC()
         self.pc.header.frame_id = 'world'
         self.state = PA()
-        self.updated = False # if s_ is updated
-        self.stored = True # if experience is stored and reward is computed
+        self.updated = True # if s_ is updated
         self.got_callback1 = False
         self.got_callback2 = False
         print("Initialized communication")
@@ -133,14 +132,14 @@ class Trainer():
 
 
     def callback1(self, pa):
-        n_px = (np.array([pa.poses[i].position.x for i in range(4)]) - self.x_offset)*self.scaler
-        n_py = (np.array([pa.poses[i].position.y for i in range(4)]) - self.y_offset)*self.scaler
-        n_pz = (np.array([pa.poses[i].position.z for i in range(4)]) - self.z_offset)*self.scaler
-        n_t = self.target*self.scaler
-        self.s = np.concatenate((n_px, n_py, n_pz, n_t))
-        if self.current_ep < MAX_EPISODES:
-            if self.current_step < MAX_EP_STEPS:
-                if self.stored:
+        if self.updated: # if s_ is updated, generate a new action
+            n_px = (np.array([pa.poses[i].position.x for i in range(4)]) - self.x_offset)*self.scaler
+            n_py = (np.array([pa.poses[i].position.y for i in range(4)]) - self.y_offset)*self.scaler
+            n_pz = (np.array([pa.poses[i].position.z for i in range(4)]) - self.z_offset)*self.scaler
+            n_t = self.target*self.scaler
+            self.s = np.concatenate((n_px, n_py, n_pz, n_t))
+            if self.current_ep < MAX_EPISODES:
+                if self.current_step < MAX_EP_STEPS:
                     delta_a = self.ddpg.choose_action(self.s)*A_BOUND + A_BOUND
                     print("Raw action:")
                     print delta_a
@@ -155,8 +154,7 @@ class Trainer():
                     rospy.sleep(2.5)
                     print "Current action:"
                     print self.current_action
-                    self.updated = True
-                    self.stored = False
+                    self.updated = False # the new state and action need to be stored
 
 
 
@@ -173,8 +171,7 @@ class Trainer():
         print("Target: ")
         print n_t
         self.pub_state(n_px, n_py, n_pz, n_t)
-        if self.updated:
-            self.updated = False
+        if not self.updated: # True when action and new state require to be stored
             self.compute_reward(end, n_t)
             action = (self.current_action - A_BOUND)/30.0
             print action
@@ -229,8 +226,7 @@ class Trainer():
                     self.run_action(self.action_V3)
                     """
                     rospy.sleep(2.5)
-
-            self.stored = True
+            self.updated = True
             print('\n')
 
 
