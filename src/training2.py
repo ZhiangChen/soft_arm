@@ -68,7 +68,7 @@ class Trainer(object):
         while not (rospy.is_shutdown()):
             if self.current_ep < MAX_EPISODES:
                 if self.current_step < MAX_EP_STEPS:
-                    while not self.updated:
+                    while (not self.updated) & (not rospy.is_shutdown()) :
                         rospy.sleep(0.1)
                     s = self.s.copy()
 
@@ -88,7 +88,7 @@ class Trainer(object):
                     print self.current_action
 
                     self.updated = False
-                    while not self.updated:
+                    while (not self.updated) & (not rospy.is_shutdown()):
                         rospy.sleep(0.1)
                     s_ = self.s.copy()
                     self.compute_reward(self.end, self.n_t)
@@ -208,4 +208,7 @@ class Trainer(object):
 if __name__ == '__main__':
     rospy.init_node('trainer',anonymous=True)
     trainer = Trainer()
+    trainer.action_V3.x, trainer.action_V3.y, trainer.action_V3.z \
+        = 0.0, 0.0, 0.0
+    trainer.run_action(trainer.action_V3)
     print("Shutting down ROS node trainer")
