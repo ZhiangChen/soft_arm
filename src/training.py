@@ -33,27 +33,22 @@ Y_OFFSET = -0.2834
 Z_OFFSET = 0.0376
 S_DIM = 15
 A_DIM = 3
-A_BOUND = 5
+A_BOUND = 15
 GOT_GOAL = -2
-TRAIN_POINT = 500
-
-
-np.random.seed(1)
-tf.set_random_seed(1)
-
+TRAIN_POINT = 300
 
 
 
 class Trainer():
     def __init__(self):
         """ Initializing DDPG """
-        self.ddpg = DDPG(a_dim=A_DIM, s_dim=S_DIM, memory_capacity=10000)
+        self.ddpg = DDPG(a_dim=A_DIM, s_dim=S_DIM, batch_size=10, memory_capacity=500)
         self.ep_reward = 0.0
         self.current_ep = 0
         self.current_step = 0
         self.current_action = np.array([.0, .0, .0])
         self.done = True # if the episode is done
-        self.var = 3.0
+        self.var = 5.0
         print("Initialized DDPG")
 
         """ Setting communication"""
@@ -146,13 +141,13 @@ class Trainer():
         if self.current_ep < MAX_EPISODES:
             if self.current_step < MAX_EP_STEPS:
                 if self.stored:
-                    delta_a = self.ddpg.choose_action(self.s)*A_BOUND
-                    print("Delta action:")
+                    delta_a = self.ddpg.choose_action(self.s)*A_BOUND + A_BOUND
+                    print("Raw action:")
                     print delta_a
                     delta_a = np.random.normal(delta_a,self.var)
-                    print("Noise delta: ")
+                    print("Noise action: ")
                     print delta_a
-                    self.current_action += delta_a
+                    self.current_action = delta_a
                     self.current_action = np.clip(self.current_action, 0, 30)
                     self.action_V3.x, self.action_V3.y, self.action_V3.z \
                         = self.current_action[0], self.current_action[1], self.current_action[2]
@@ -181,12 +176,15 @@ class Trainer():
         if self.updated:
             self.updated = False
             self.compute_reward(end, n_t)
+            action = (self.current_action - A_BOUND)/30.0
+            print action
             self.ddpg.store_transition(self.s, self.current_action, self.reward, self.s_)
             #print("Experience stored")
 
             if self.ddpg.pointer > TRAIN_POINT:
-                self.var *= 0.9999
-                self.ddpg.learn()
+                if (self.current_step % 2 == 0):
+                    self.var *= 0.995
+                    self.ddpg.learn()
 
             self.current_step += 1
             self.ep_reward += self.reward
@@ -198,15 +196,17 @@ class Trainer():
                 self.sample_target()
                 print "Target Reached"
                 print("Episode %i Ended" % self.current_ep)
-                print('Episode:', self.current_ep, ' Reward: %i' % int(self.ep_reward), 'Explore: %.2f' % self.var,)
+                print('Episode:', self.current_ep, ' Reward: %d' % self.ep_reward, 'Explore: %.2f' % self.var,)
                 print('*'*40)
                 self.ep_reward = 0
                 self.ddpg.save_memory()
                 self.ddpg.save_model()
+                """
                 self.current_action = np.array([.0, .0, .0])
                 self.action_V3.x, self.action_V3.y, self.action_V3.z \
                     = self.current_action[0], self.current_action[1], self.current_action[2]
                 self.run_action(self.action_V3)
+                """
                 rospy.sleep(2.5)
 
             else:
@@ -214,7 +214,7 @@ class Trainer():
                 if self.current_step == MAX_EP_STEPS:
                     print "Target Failed"
                     print("Episode %i Ends" % self.current_ep)
-                    print('Episode:', self.current_ep, ' Reward: %f' % int(self.ep_reward), 'Explore: %.2f' % self.var,)
+                    print('Episode:', self.current_ep, ' Reward: %d' % self.ep_reward, 'Explore: %.2f' % self.var,)
                     print('*' * 40)
                     self.current_step = 0
                     self.current_ep += 1
@@ -222,10 +222,12 @@ class Trainer():
                     self.ep_reward = 0
                     self.ddpg.save_memory()
                     self.ddpg.save_model()
+                    """
                     self.current_action = np.array([.0, .0, .0])
                     self.action_V3.x, self.action_V3.y, self.action_V3.z \
                         = self.current_action[0], self.current_action[1], self.current_action[2]
                     self.run_action(self.action_V3)
+                    """
                     rospy.sleep(2.5)
 
             self.stored = True
