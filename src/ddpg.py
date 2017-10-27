@@ -128,7 +128,7 @@ class DDPG(object):
 
     def save_memory(self):
         M = {"memory":self.memory, "pointer": self.pointer}
-        with open("memory.p", 'wb') as wfp:
+        with open("./data/memory.p", 'wb') as wfp:
             pickle.dump(M, wfp)
         print("Saved memory")
         print("Pointer location: " + str(self.pointer))
@@ -142,9 +142,9 @@ class DDPG(object):
         self.saver.restore(self.sess, "./model/model.ckpt")
 
     def restore_momery(self):
-        M = pickle.load(open('memory.p', 'rb'))
+        M = pickle.load(open('./data/memory.p', 'rb'))
         self.memory = M["memory"]
-        self.pointer = M["pointer"]
+        self.pointer = 200#M["pointer"]
         print("Restored memory")
         print("Pointer location: %i" % self.pointer)
 

@@ -36,14 +36,14 @@ if __name__ == "__main__":
 
 	elif len(sys.argv)==2:
 		if sys.argv[1]=='all':
-			for x in range(0,45,5):
-				for y in range(0,45,5):
-					for z in range(0,45,5):
+			for z in range(0,22,2):
+				for y in range(0,22,2):
+					for x in range(0,22,2):
 						control.x = x
 						control.y = y
 						control.z = z
 						print run_action(control)
-						rospy.sleep(4.0)
+						rospy.sleep(3.0)
 						print "done"
 						pub.publish(control)
 

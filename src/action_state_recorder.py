@@ -16,19 +16,19 @@ class ASRecorder(object):
     ASRecorder is action-state recorder
     """
     def __init__(self):
-        self.sub1 = rospy.Subscriber('agent_state', PA, self.callback1, queue_size=1)
+        self.sub1 = rospy.Subscriber('robot_pose', PA, self.callback1, queue_size=1)
         self.sub2 = rospy.Subscriber('action', Vector3, self.callback2, queue_size=1)
         self.action_state = list()
         self.crt_state = list()
 
     def callback1(self, pa):
-        n_px = [pa.poses[i].position.x for i in range(5)]
-        n_py = [pa.poses[i].position.y for i in range(5)]
-        n_pz = [pa.poses[i].position.z for i in range(5)]
-        n_ox = [pa.poses[i].orientation.x for i in range(5)]
-        n_oy = [pa.poses[i].orientation.y for i in range(5)]
-        n_oz = [pa.poses[i].orientation.z for i in range(5)]
-        n_ow = [pa.poses[i].orientation.w for i in range(5)]
+        n_px = [pa.poses[i].position.x for i in range(4)]
+        n_py = [pa.poses[i].position.y for i in range(4)]
+        n_pz = [pa.poses[i].position.z for i in range(4)]
+        n_ox = [pa.poses[i].orientation.x for i in range(4)]
+        n_oy = [pa.poses[i].orientation.y for i in range(4)]
+        n_oz = [pa.poses[i].orientation.z for i in range(4)]
+        n_ow = [pa.poses[i].orientation.w for i in range(4)]
         self.crt_state = np.array([n_px,n_py,n_pz,n_ox,n_oy,n_oz,n_ow]).transpose()
 
     def callback2(self, v3):

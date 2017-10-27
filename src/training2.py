@@ -14,14 +14,14 @@ import pickle
 
 MAX_EPISODES = 200
 MAX_EP_STEPS = 10
-X_OFFSET = 0.1728
-Y_OFFSET = -0.2916
-Z_OFFSET = 0.0373
+X_OFFSET = 0.1794
+Y_OFFSET = -0.2747
+Z_OFFSET = 0.0395
 S_DIM = 15
 A_DIM = 3
-A_BOUND = 15
+A_BOUND = 12
 GOT_GOAL = -2
-TRAIN_POINT = 300
+TRAIN_POINT = 200
 
 class Trainer(object):
     def __init__(self):
@@ -32,7 +32,7 @@ class Trainer(object):
         self.current_step = 0
         self.current_action = np.array([.0, .0, .0])
         self.done = True # if the episode is done
-        self.var = 5.0
+        self.var = 8.0
         print("Initialized DDPG")
 
         """ Setting communication"""
@@ -51,9 +51,7 @@ class Trainer(object):
 
         """ Reading targets """
         """ The data should be w.r.t origin by base position """
-        ends = pickle.load(open('ends.p', 'rb'))
-        self.r_ends = ends['r_ends']
-        self.rs_ends = ends['rs_ends']
+        self.ends = pickle.load(open('./data/ends.p', 'rb'))
         self.x_offset = X_OFFSET
         self.y_offset = Y_OFFSET
         self.z_offset = Z_OFFSET
@@ -61,7 +59,7 @@ class Trainer(object):
         self.sample_target()
         print("Read target data")
 
-        #self.ddpg.restore_momery()
+        self.ddpg.restore_momery()
         #self.ddpg.restore_model()
 
 
@@ -79,7 +77,7 @@ class Trainer(object):
                     print("Noise action: ")
                     print delta_a
                     self.current_action = delta_a
-                    self.current_action = np.clip(self.current_action, 0, 30)
+                    self.current_action = np.clip(self.current_action, 0, A_BOUND*2)
                     self.action_V3.x, self.action_V3.y, self.action_V3.z \
                         = self.current_action[0], self.current_action[1], self.current_action[2]
                     self.run_action(self.action_V3)
@@ -93,13 +91,13 @@ class Trainer(object):
                     s_ = self.s.copy()
                     self.compute_reward(self.end, self.n_t)
 
-                    action = (self.current_action - A_BOUND) / 30.0
+                    action = (self.current_action - A_BOUND) / A_BOUND/2
                     self.ddpg.store_transition(s, action, self.reward, s_)
                     # print("Experience stored")
 
                     if self.ddpg.pointer > TRAIN_POINT:
                         if (self.current_step % 2 == 0):
-                            self.var *= 0.995
+                            self.var *= 0.992
                             self.ddpg.learn()
 
                     self.current_step += 1
@@ -161,14 +159,8 @@ class Trainer(object):
         self.updated = True
 
 
-    def sample_target(self, e=0.2):
-        if np.random.rand(1)[0] < e:
-            self.target = self.r_ends[np.random.randint(self.r_ends.shape[0])]
-            self.target_PS.pose.position.x, self.target_PS.pose.position.y, self.target_PS.pose.position.z\
-                = self.target[0], self.target[1], self.target[2]
-            return self.target_PS
-        else:
-            self.target = self.rs_ends[np.random.randint(self.rs_ends.shape[0])]
+    def sample_target(self):
+            self.target = self.ends[np.random.randint(self.ends.shape[0])]
             self.target_PS.pose.position.x, self.target_PS.pose.position.y, self.target_PS.pose.position.z \
                 = self.target[0], self.target[1], self.target[2]
             return self.target_PS
