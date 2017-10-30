@@ -144,7 +144,7 @@ class DDPG(object):
     def restore_momery(self):
         M = pickle.load(open('./data/memory.p', 'rb'))
         self.memory = M["memory"]
-        self.pointer = 200#M["pointer"]
+        self.pointer = M["pointer"]
         print("Restored memory")
         print("Pointer location: %i" % self.pointer)
 

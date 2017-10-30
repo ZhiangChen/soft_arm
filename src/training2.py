@@ -16,10 +16,10 @@ MAX_EPISODES = 200
 MAX_EP_STEPS = 10
 X_OFFSET = 0.1794
 Y_OFFSET = -0.2747
-Z_OFFSET = 0.0395
+Z_OFFSET = 0.2395
 S_DIM = 15
 A_DIM = 3
-A_BOUND = 12
+A_BOUND = 3.0
 GOT_GOAL = -2
 TRAIN_POINT = 200
 
@@ -32,7 +32,7 @@ class Trainer(object):
         self.current_step = 0
         self.current_action = np.array([.0, .0, .0])
         self.done = True # if the episode is done
-        self.var = 8.0
+        self.var = 5.0
         print("Initialized DDPG")
 
         """ Setting communication"""
@@ -59,7 +59,7 @@ class Trainer(object):
         self.sample_target()
         print("Read target data")
 
-        self.ddpg.restore_momery()
+        #self.ddpg.restore_momery()
         #self.ddpg.restore_model()
 
 
@@ -70,14 +70,15 @@ class Trainer(object):
                         rospy.sleep(0.1)
                     s = self.s.copy()
 
-                    delta_a = self.ddpg.choose_action(s)*A_BOUND + A_BOUND
-                    print("Raw action:")
+                    delta_a = self.ddpg.choose_action(s)*A_BOUND
+                    print delta_a/A_BOUND
+                    print("Delta action:")
                     print delta_a
                     delta_a = np.random.normal(delta_a,self.var)
-                    print("Noise action: ")
+                    print("Noise delta action: ")
                     print delta_a
-                    self.current_action = delta_a
-                    self.current_action = np.clip(self.current_action, 0, A_BOUND*2)
+                    self.current_action += delta_a
+                    self.current_action = np.clip(self.current_action, 0, 25)
                     self.action_V3.x, self.action_V3.y, self.action_V3.z \
                         = self.current_action[0], self.current_action[1], self.current_action[2]
                     self.run_action(self.action_V3)
@@ -91,7 +92,8 @@ class Trainer(object):
                     s_ = self.s.copy()
                     self.compute_reward(self.end, self.n_t)
 
-                    action = (self.current_action - A_BOUND) / A_BOUND/2
+                    action = delta_a / A_BOUND
+                    print action
                     self.ddpg.store_transition(s, action, self.reward, s_)
                     # print("Experience stored")
 
@@ -153,7 +155,7 @@ class Trainer(object):
         n_py = (np.array([pa.poses[i].position.y for i in range(4)]) - self.y_offset)*self.scaler
         n_pz = (np.array([pa.poses[i].position.z for i in range(4)]) - self.z_offset)*self.scaler
         self.end = np.array((n_px[3], n_py[3], n_pz[3]))
-        self.n_t = self.target*self.scaler
+        self.n_t = (self.target - np.array([0,0,Z_OFFSET]))*self.scaler
         self.s = np.concatenate((n_px, n_py, n_pz, self.n_t))
         self.pub_state(n_px, n_py, n_pz, self.n_t)
         self.updated = True
@@ -175,7 +177,7 @@ class Trainer(object):
 
     def compute_reward(self,end,target):
         error = target - end
-        self.reward = -np.exp(np.linalg.norm(error)*10)
+        self.reward = -np.exp(np.linalg.norm(error)*20)
         print np.linalg.norm(error)
         print("Reward: %d" % self.reward)
 
