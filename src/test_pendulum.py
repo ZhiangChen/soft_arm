@@ -39,14 +39,14 @@ for i in range(MAX_EPISODES):
     for j in range(MAX_EP_STEPS):
         if RENDER & (i%5==0):
             env.render()
-            print ddpg.get_value(s, a, np.array(r).reshape([-1, 1]), s_)
+            #print ddpg.get_value(s, a, np.array(r).reshape([-1, 1]), s_)
 
         # Add exploration noise
         a = ddpg.choose_action(s)*a_bound
         a = np.clip(np.random.normal(a, var), -2, 2)    # add randomness to action selection for exploration
         s_, r, done, info = env.step(a)
 
-        ddpg.store_transition(s, a, r / 10, s_)
+        ddpg.store_transition(s, a/a_bound, r / 10, s_)
 
         if ddpg.pointer > ddpg.memory_capacity:
             var *= .9999    # decay the action randomness

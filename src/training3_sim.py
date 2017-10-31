@@ -16,28 +16,28 @@ import pickle
 from simulator import Sim
 
 
-MAX_EPISODES = 2000
+MAX_EPISODES = 500
 MAX_EP_STEPS = 10
 X_OFFSET = 0.0
 Y_OFFSET = 0.0
 Z_OFFSET = 0.0
-S_DIM = 15
+S_DIM = 3
 A_DIM = 3
 A_BOUND = 10.0
 GOT_GOAL = -2
-TRAIN_POINT = 2000
+TRAIN_POINT = 100
 
 class Trainer(object):
     def __init__(self):
         """ Initializing DDPG """
         self.sim = Sim()
-        self.ddpg = DDPG(a_dim=A_DIM, s_dim=S_DIM, batch_size=10, memory_capacity=2000)
+        self.ddpg = DDPG(a_dim=A_DIM, s_dim=S_DIM, batch_size=10, memory_capacity=1000)
         self.ep_reward = 0.0
         self.current_ep = 0
         self.current_step = 0
         self.current_action = np.array([.0, .0, .0])
         self.done = True # if the episode is done
-        self.var = 10.0
+        self.var = 2.0
         print("Initialized DDPG")
 
         """ Setting communication"""
@@ -75,8 +75,8 @@ class Trainer(object):
                 if self.current_step < MAX_EP_STEPS:
                     p = self.sim.current_pose
                     s = np.vstack((p, self.target))
-                    norm_a = self.ddpg.choose_action(s.reshape(15))
-                    action = norm_a * A_BOUND + A_BOUND
+                    norm_a = self.ddpg.choose_action(s.reshape(S_DIM))
+                    action = norm_a + A_BOUND
                     noise_a = np.random.normal(action, self.var)
                     print("Normalized action:")
                     print norm_a
@@ -94,7 +94,7 @@ class Trainer(object):
                     print self.current_action
 
                     self.compute_reward(s_[3,:], s_[4,:])
-                    action = (noise_a - A_BOUND) / A_BOUND
+                    action = (self.current_action - A_BOUND)
                     print("Normalized action")
                     print action
 
@@ -103,8 +103,8 @@ class Trainer(object):
                     # print("Experience stored")
 
                     if self.ddpg.pointer > TRAIN_POINT:
-                        if (self.current_step % 2 == 0):
-                            self.var *= 0.9995
+                        if (self.current_step % 10 == 0):
+                            self.var *= 0.999
                             self.ddpg.learn()
 
                     self.current_step += 1
@@ -151,7 +151,7 @@ class Trainer(object):
                             """
                     print('\n')
                     self.pub_state(s_)
-                    #rospy.sleep(1)
+                    rospy.sleep(1)
             else:
                 p = self.sim.current_pose
                 s = np.vstack((p, self.target))
