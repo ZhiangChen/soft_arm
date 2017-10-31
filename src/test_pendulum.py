@@ -26,27 +26,31 @@ a_dim = env.action_space.shape[0]
 a_bound = env.action_space.high
 
 ddpg = DDPG(a_dim=a_dim, s_dim=s_dim)
-var = 2.0  # control exploration
+var = 1.0  # control exploration
 for i in range(MAX_EPISODES):
     s = env.reset()
     ep_reward = 0
-    #if i == 100:
+    if i == 10:
     #   ddpg.save_model()
-    #    ddpg.save_memory()
+        ddpg.save_memory()
     #ddpg.restore_momery()
     #ddpg.restore_model()
+
 
     for j in range(MAX_EP_STEPS):
         if RENDER & (i%5==0):
             env.render()
+            #ddpg.save_memory()
             #print ddpg.get_value(s, a, np.array(r).reshape([-1, 1]), s_)
 
         # Add exploration noise
-        a = ddpg.choose_action(s)*a_bound
-        a = np.clip(np.random.normal(a, var), -2, 2)    # add randomness to action selection for exploration
-        s_, r, done, info = env.step(a)
+        norm_a = ddpg.choose_action(s)
+        noise_a = np.random.normal(norm_a, var)
+        a = np.clip(noise_a,-1.0,1.0)
+        action = a * a_bound
+        s_, r, done, info = env.step(action)
 
-        ddpg.store_transition(s, a/a_bound, r / 10, s_)
+        ddpg.store_transition(s, a, r / 10, s_)
 
         if ddpg.pointer > ddpg.memory_capacity:
             var *= .9999    # decay the action randomness

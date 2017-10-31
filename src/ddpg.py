@@ -24,7 +24,7 @@ class DDPG(object):
     - choose action
     - store transition
     """
-    def __init__(self, lr_a=0.01, lr_c=0.01, gamma=0.99, tau=0.001, batch_size=16, a_dim=3, s_dim=31,
+    def __init__(self, lr_a=0.0001, lr_c=0.001, gamma=0.99, tau=0.001, batch_size=16, a_dim=3, s_dim=31,
                  memory_capacity=10000):
         """
         :param lr_a: learning rate of actor
@@ -137,8 +137,8 @@ class DDPG(object):
         M = {"memory":self.memory, "pointer": self.pointer}
         with open("./data/memory.p", 'wb') as wfp:
             pickle.dump(M, wfp)
-        print("Saved memory")
-        print("Pointer location: " + str(self.pointer))
+        #print("Saved memory")
+        #print("Pointer location: " + str(self.pointer))
 
     def save_model(self):
         save_path = self.saver.save(self.sess, "./model/model.ckpt")
@@ -156,16 +156,16 @@ class DDPG(object):
         print("Pointer location: %i" % self.pointer)
 
     def _build_a(self, s, scope, trainable):
-        hid_num1 = 500
+        hid_num1 = 20
         hid_num2 = 10
         with tf.variable_scope(scope):
-            F1_weights = tf.Variable(tf.truncated_normal([self.s_dim, hid_num1], stddev=10.0), trainable=trainable)
-            F1_biases = tf.Variable(tf.constant(1.0, shape=[hid_num1]), trainable=trainable)
+            F1_weights = tf.Variable(tf.truncated_normal([self.s_dim, hid_num1], stddev=1.0), trainable=trainable)
+            F1_biases = tf.Variable(tf.constant(0.1, shape=[hid_num1]), trainable=trainable)
 
-            F2_weights = tf.Variable(tf.truncated_normal([hid_num1, hid_num2], stddev=5.0), trainable=trainable)
-            F2_biases = tf.Variable(tf.constant(1.0, shape=[hid_num2]), trainable=trainable)
+            F2_weights = tf.Variable(tf.truncated_normal([hid_num1, hid_num2], stddev=1.0), trainable=trainable)
+            F2_biases = tf.Variable(tf.constant(0.1, shape=[hid_num2]), trainable=trainable)
 
-            F3_weights = tf.Variable(tf.truncated_normal([hid_num2, self.a_dim], stddev=0.5), trainable=trainable)
+            F3_weights = tf.Variable(tf.truncated_normal([hid_num2, self.a_dim], stddev=1.0), trainable=trainable)
             F3_biases = tf.Variable(tf.constant(0.01, shape=[self.a_dim]), trainable=trainable)
 
             fc = tf.matmul(s, F1_weights)
@@ -175,40 +175,39 @@ class DDPG(object):
             hidden = tf.nn.tanh(fc + F2_biases)
 
             fc = tf.matmul(hidden, F3_weights)
-            output = tf.nn.tanh(fc + F3_biases)
+            output = tf.clip_by_value(fc + F3_biases,-1.0,1.0)
 
-            output = tf.multiply(output, 10.0)
 
             reg_loss = ALPHA * (tf.nn.l2_loss(F1_weights) + tf.nn.l2_loss(F2_weights) + tf.nn.l2_loss(F3_weights))
 
             #bn1 = tf.layers.batch_normalization(s, axis=1, training=self.is_training, name='bn1', trainable=trainable)
-            #hidden1 = tf.layers.dense(s, 500, activation=tf.nn.sigmoid, name='fc1', trainable=trainable, kernel_initializer=tf.contrib.layers.xavier_initializer())
+            hidden1 = tf.layers.dense(s, hid_num1, activation=tf.nn.relu, name='fc1', trainable=trainable, kernel_initializer=tf.contrib.layers.xavier_initializer())
             #bn2 = tf.layers.batch_normalization(hidden1, axis=-1, training=self.is_training, name='bn2', trainable=trainable)
-            #hidden2 = tf.layers.dense(hidden1, 5, activation=tf.sigmoid, name='fc2', trainable=trainable, kernel_initializer=tf.contrib.layers.xavier_initializer())
-            #scaled_a = tf.layers.dense(hidden2, self.a_dim, activation=tf.nn.tanh, name='scaled_a', trainable=trainable, kernel_initializer=tf.contrib.layers.xavier_initializer())
-            return output, reg_loss
+            hidden2 = tf.layers.dense(hidden1, hid_num2, activation=tf.tanh, name='fc2', trainable=trainable, kernel_initializer=tf.contrib.layers.xavier_initializer())
+            scaled_a = tf.layers.dense(hidden2, self.a_dim, activation=tf.nn.tanh, name='scaled_a', trainable=trainable, kernel_initializer=tf.contrib.layers.xavier_initializer())
+            return scaled_a, reg_loss
 
 
     def _build_c(self, s, a, scope, trainable):
-        hid_num1 = 500
-        hid_num2 = 100
+        hid_num1 = 200
+        hid_num2 = 10
         with tf.variable_scope(scope):
             concat = tf.concat([s, a], axis=1, name='concat')
 
-            F1_weights = tf.Variable(tf.truncated_normal([self.s_dim+self.a_dim, hid_num1], stddev=0.5), trainable=trainable)
-            F1_biases = tf.Variable(tf.constant(1.0, shape=[hid_num1]), trainable=trainable)
+            F1_weights = tf.Variable(tf.truncated_normal([self.s_dim+self.a_dim, hid_num1], stddev=5.0), trainable=trainable)
+            F1_biases = tf.Variable(tf.constant(0.1, shape=[hid_num1]), trainable=trainable)
 
-            F2_weights = tf.Variable(tf.truncated_normal([hid_num1, hid_num2], stddev=0.5), trainable=trainable)
-            F2_biases = tf.Variable(tf.constant(1.0, shape=[hid_num2]), trainable=trainable)
+            F2_weights = tf.Variable(tf.truncated_normal([hid_num1, hid_num2], stddev=1.0), trainable=trainable)
+            F2_biases = tf.Variable(tf.constant(0.1, shape=[hid_num2]), trainable=trainable)
 
-            F3_weights = tf.Variable(tf.truncated_normal([hid_num2, 1], stddev=0.5), trainable=trainable)
-            F3_biases = tf.Variable(tf.constant(1.0, shape=[1]), trainable=trainable)
+            F3_weights = tf.Variable(tf.truncated_normal([hid_num2, 1], stddev=0.01), trainable=trainable)
+            F3_biases = tf.Variable(tf.constant(0.01, shape=[1]), trainable=trainable)
 
             fc = tf.matmul(concat, F1_weights)
             hidden = tf.nn.relu(fc + F1_biases)
 
             fc = tf.matmul(hidden, F2_weights)
-            hidden = tf.nn.sigmoid(fc + F2_biases)
+            hidden = tf.nn.tanh(fc + F2_biases)
 
             fc = tf.matmul(hidden, F3_weights)
             output = fc + F3_biases
@@ -216,8 +215,16 @@ class DDPG(object):
             reg_loss = ALPHA * (tf.nn.l2_loss(F1_weights) + tf.nn.l2_loss(F2_weights) + tf.nn.l2_loss(F3_weights))
 
             #bn1 = tf.layers.batch_normalization(concat, axis=-1, training=self.is_training, name='bn1', trainable=trainable)
-            #hidden1 = tf.layers.dense(concat, 50, activation=tf.nn.relu, name='fc1', trainable=trainable, kernel_initializer=tf.contrib.layers.xavier_initializer())
+            hidden1 = tf.layers.dense(concat, hid_num1, activation=tf.nn.relu, name='fc1', trainable=trainable, kernel_initializer=tf.contrib.layers.xavier_initializer())
             #bn2 = tf.layers.batch_normalization(hidden1, axis=-1, training=self.is_training, name='bn2', trainable=trainable)
-            #hidden2 = tf.layers.dense(hidden1, 5, activation=tf.nn.relu, name='fc2', trainable=trainable, kernel_initializer=tf.contrib.layers.xavier_initializer())
-            #q = tf.layers.dense(hidden1, 1, name='q', trainable=trainable, kernel_initializer=tf.contrib.layers.xavier_initializer())
-            return output, reg_loss
+            hidden2 = tf.layers.dense(hidden1, hid_num2, activation=tf.nn.sigmoid, name='fc2', trainable=trainable, kernel_initializer=tf.contrib.layers.xavier_initializer())
+            q = tf.layers.dense(hidden2, 1, name='q', trainable=trainable, kernel_initializer=tf.contrib.layers.xavier_initializer())
+            return q, reg_loss
+
+    def rtanh(self, x):
+        if x>=1.0:
+            return 1.0
+        elif x<=-1.0:
+            return -1.0
+        else:
+            return x
