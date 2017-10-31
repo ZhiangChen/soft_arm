@@ -23,7 +23,7 @@ class DDPG(object):
     - choose action
     - store transition
     """
-    def __init__(self, lr_a=0.001, lr_c=0.002, gamma=0.99, tau=0.001, batch_size=16, a_dim=3, s_dim=31,
+    def __init__(self, lr_a=0.01, lr_c=0.001, gamma=0.99, tau=0.001, batch_size=16, a_dim=3, s_dim=31,
                  memory_capacity=10000):
         """
         :param lr_a: learning rate of actor
@@ -75,7 +75,8 @@ class DDPG(object):
                 a_loss = - tf.reduce_mean(q)  # maximize the q
             self.ctrain = tf.train.AdamOptimizer(self.lr_c).minimize(td_error, var_list=self.ce_params)
             self.atrain = tf.train.AdamOptimizer(self.lr_a).minimize(a_loss, var_list=self.ae_params)
-
+        self.q_e = q
+        self.q_t = q_target
         self.saver = tf.train.Saver()
         self.sess.run(tf.global_variables_initializer())
 
@@ -110,6 +111,11 @@ class DDPG(object):
         :return: current action from the actor
         """
         return self.sess.run(self.a, {self.S: s[np.newaxis, :], self.is_training:False})[0]
+
+    def get_value(self, s, a, r, s_):
+        return self.sess.run((self.q_t, self.q_e), {self.S: s[np.newaxis, :], self.a: a[np.newaxis, :],
+                                                  self.R: r, self.S_: s_[np.newaxis, :], self.is_training: False})
+
 
     def store_transition(self, s, a, r, s_):
         """
@@ -151,9 +157,9 @@ class DDPG(object):
     def _build_a(self, s, scope, trainable):
         with tf.variable_scope(scope):
             #bn1 = tf.layers.batch_normalization(s, axis=1, training=self.is_training, name='bn1', trainable=trainable)
-            hidden1 = tf.layers.dense(s, 50, activation=tf.nn.relu, name='fc1', trainable=trainable, kernel_initializer=tf.contrib.layers.xavier_initializer())
+            hidden1 = tf.layers.dense(s, 50, activation=tf.nn.sigmoid, name='fc1', trainable=trainable, kernel_initializer=tf.contrib.layers.xavier_initializer())
             #bn2 = tf.layers.batch_normalization(hidden1, axis=-1, training=self.is_training, name='bn2', trainable=trainable)
-            hidden2 = tf.layers.dense(hidden1, 10, activation=tf.nn.relu, name='fc2', trainable=trainable, kernel_initializer=tf.contrib.layers.xavier_initializer())
+            hidden2 = tf.layers.dense(hidden1, 5, activation=tf.sigmoid, name='fc2', trainable=trainable, kernel_initializer=tf.contrib.layers.xavier_initializer())
             scaled_a = tf.layers.dense(hidden2, self.a_dim, activation=tf.nn.tanh, name='scaled_a', trainable=trainable, kernel_initializer=tf.contrib.layers.xavier_initializer())
             return scaled_a
 
@@ -164,6 +170,6 @@ class DDPG(object):
             #bn1 = tf.layers.batch_normalization(concat, axis=-1, training=self.is_training, name='bn1', trainable=trainable)
             hidden1 = tf.layers.dense(concat, 50, activation=tf.nn.relu, name='fc1', trainable=trainable, kernel_initializer=tf.contrib.layers.xavier_initializer())
             #bn2 = tf.layers.batch_normalization(hidden1, axis=-1, training=self.is_training, name='bn2', trainable=trainable)
-            hidden2 = tf.layers.dense(hidden1, 10, activation=tf.nn.relu, name='fc2', trainable=trainable, kernel_initializer=tf.contrib.layers.xavier_initializer())
-            q = tf.layers.dense(hidden2, 1, name='q', trainable=trainable, kernel_initializer=tf.contrib.layers.xavier_initializer())
+            hidden2 = tf.layers.dense(hidden1, 5, activation=tf.nn.relu, name='fc2', trainable=trainable, kernel_initializer=tf.contrib.layers.xavier_initializer())
+            q = tf.layers.dense(hidden1, 1, name='q', trainable=trainable, kernel_initializer=tf.contrib.layers.xavier_initializer())
             return q

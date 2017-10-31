@@ -13,6 +13,9 @@
 --- Labview
 
 """
+"""
+This node has bugs (s and s' are the same). Don't use it!
+"""
 
 from ddpg import *
 import rospy

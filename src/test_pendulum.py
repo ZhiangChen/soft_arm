@@ -26,8 +26,7 @@ a_dim = env.action_space.shape[0]
 a_bound = env.action_space.high
 
 ddpg = DDPG(a_dim=a_dim, s_dim=s_dim)
-#var = 2.0  # control exploration
-var = 0.5
+var = 2.0  # control exploration
 for i in range(MAX_EPISODES):
     s = env.reset()
     ep_reward = 0
@@ -40,6 +39,7 @@ for i in range(MAX_EPISODES):
     for j in range(MAX_EP_STEPS):
         if RENDER & (i%5==0):
             env.render()
+            print ddpg.get_value(s, a, np.array(r).reshape([-1, 1]), s_)
 
         # Add exploration noise
         a = ddpg.choose_action(s)*a_bound
@@ -57,5 +57,6 @@ for i in range(MAX_EPISODES):
         ep_reward += r
         if j == MAX_EP_STEPS-1:
             print('Episode:', i, ' Reward: %i' % int(ep_reward), 'Explore: %.2f' % var, )
+            #print ddpg.get_value(s, a, np.array(r).reshape([-1, 1]), s_)
             if ep_reward > -300:RENDER = True
             break
