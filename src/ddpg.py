@@ -52,17 +52,20 @@ class DDPG(object):
         self.is_training = tf.placeholder(tf.bool, name='is_training')
 
         with tf.variable_scope('Actor'):
-            self.a, reg_loss_a = self._build_a(self.S, scope='eval', trainable=True)
-            a_, reg_loss_a_ = self._build_a(self.S_, scope='target', trainable=False)
+            self.a = self._build_a(self.S, scope='eval', trainable=True)
+            a_ = self._build_a(self.S_, scope='target', trainable=False)
         with tf.variable_scope('Critic'):
-            q, reg_loss_c = self._build_c(self.S, self.a, scope='eval', trainable=True)
-            q_, reg_loss_c_ = self._build_c(self.S_, a_, scope='target', trainable=False)
+            q = self._build_c(self.S, self.a, scope='eval', trainable=True)
+            q_ = self._build_c(self.S_, a_, scope='target', trainable=False)
 
         # networks parameters
         self.ae_params = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='Actor/eval')
         self.at_params = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='Actor/target')
         self.ce_params = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='Critic/eval')
         self.ct_params = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='Critic/target')
+
+        self.l2_loss_c = tf.add_n([tf.nn.l2_loss(v) for v in self.ce_params])
+        self.l2_loss_a = tf.add_n([tf.nn.l2_loss(v) for v in self.ae_params])
 
         # target net replacement
         self.soft_replace = [[tf.assign(ta, (1 - self.tau) * ta + self.tau * ea), tf.assign(tc, (1 - self.tau) * tc + self.tau * ec)]
@@ -157,8 +160,9 @@ class DDPG(object):
 
     def _build_a(self, s, scope, trainable):
         hid_num1 = 200
-        hid_num2 = 50
+        hid_num2 = 20
         with tf.variable_scope(scope):
+            """
             F1_weights = tf.Variable(tf.truncated_normal([self.s_dim, hid_num1], stddev=1.0), trainable=trainable)
             F1_biases = tf.Variable(tf.constant(0.1, shape=[hid_num1]), trainable=trainable)
 
@@ -179,13 +183,17 @@ class DDPG(object):
 
 
             reg_loss = ALPHA * (tf.nn.l2_loss(F1_weights) + tf.nn.l2_loss(F2_weights) + tf.nn.l2_loss(F3_weights))
-
+            """
             #bn1 = tf.layers.batch_normalization(s, axis=1, training=self.is_training, name='bn1', trainable=trainable)
-            hidden1 = tf.layers.dense(s, hid_num1, activation=tf.nn.relu, name='fc1', trainable=trainable, kernel_initializer=tf.contrib.layers.xavier_initializer())
+            hidden1 = tf.layers.dense(s, hid_num1, activation=tf.nn.relu, name='fc1', trainable=trainable,
+                                      kernel_initializer=tf.contrib.layers.xavier_initializer())
             #bn2 = tf.layers.batch_normalization(hidden1, axis=-1, training=self.is_training, name='bn2', trainable=trainable)
-            hidden2 = tf.layers.dense(hidden1, hid_num2, activation=tf.tanh, name='fc2', trainable=trainable, kernel_initializer=tf.contrib.layers.xavier_initializer())
-            scaled_a = tf.layers.dense(hidden2, self.a_dim, activation=tf.nn.tanh, name='scaled_a', trainable=trainable, kernel_initializer=tf.contrib.layers.xavier_initializer())
-            return scaled_a, reg_loss
+            hidden2 = tf.layers.dense(hidden1, hid_num2, activation=tf.tanh, name='fc2', trainable=trainable,
+                                      kernel_initializer=tf.contrib.layers.xavier_initializer())
+            #scaled_a = tf.layers.dense(hidden2, self.a_dim, activation=tf.nn.tanh, name='scaled_a', trainable=trainable,
+            #                           kernel_initializer=tf.random_uniform_initializer(-3e-3, 3e-3))
+            scaled_a = tf.layers.dense(hidden2, self.a_dim, activation=tf.nn.tanh, name='scaled_a', trainable=trainable,kernel_initializer=tf.contrib.layers.xavier_initializer())
+            return scaled_a
 
     def t_relu(self,x):
         return tf.clip_by_value(x,-1.0,1.0)
@@ -193,10 +201,10 @@ class DDPG(object):
 
     def _build_c(self, s, a, scope, trainable):
         hid_num1 = 200
-        hid_num2 = 50
+        hid_num2 = 20
         with tf.variable_scope(scope):
             concat = tf.concat([s, a], axis=1, name='concat')
-
+            """
             F1_weights = tf.Variable(tf.truncated_normal([self.s_dim+self.a_dim, hid_num1], stddev=5.0), trainable=trainable)
             F1_biases = tf.Variable(tf.constant(0.1, shape=[hid_num1]), trainable=trainable)
 
@@ -216,13 +224,18 @@ class DDPG(object):
             output = fc + F3_biases
 
             reg_loss = ALPHA * (tf.nn.l2_loss(F1_weights) + tf.nn.l2_loss(F2_weights) + tf.nn.l2_loss(F3_weights))
+            """
 
             #bn1 = tf.layers.batch_normalization(concat, axis=-1, training=self.is_training, name='bn1', trainable=trainable)
-            hidden1 = tf.layers.dense(concat, hid_num1, activation=tf.nn.relu, name='fc1', trainable=trainable, kernel_initializer=tf.contrib.layers.xavier_initializer())
+            hidden1 = tf.layers.dense(concat, hid_num1, activation=tf.nn.relu, name='fc1', trainable=trainable,
+                                      kernel_initializer=tf.contrib.layers.xavier_initializer())
             #bn2 = tf.layers.batch_normalization(hidden1, axis=-1, training=self.is_training, name='bn2', trainable=trainable)
-            hidden2 = tf.layers.dense(hidden1, hid_num2, activation=tf.nn.tanh, name='fc2', trainable=trainable, kernel_initializer=tf.contrib.layers.xavier_initializer())
-            q = tf.layers.dense(hidden2, 1, name='q', trainable=trainable, kernel_initializer=tf.contrib.layers.xavier_initializer())
-            return q, reg_loss
+            hidden2 = tf.layers.dense(hidden1, hid_num2, activation=tf.nn.tanh, name='fc2', trainable=trainable,
+                                      kernel_initializer=tf.contrib.layers.xavier_initializer())
+            q = tf.layers.dense(hidden2, 1, name='q', trainable=trainable,
+                                kernel_initializer=tf.random_uniform_initializer(-3e-3, 3e-3))
+            #q = tf.layers.dense(hidden2, 1, name='q', trainable=trainable,kernel_initializer=tf.contrib.layers.xavier_initializer())
+            return q
 
     def rtanh(self, x):
         if x>=1.0:

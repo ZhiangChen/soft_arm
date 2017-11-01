@@ -14,9 +14,9 @@ from sensor_msgs.msg import PointCloud as PC
 from geometry_msgs.msg import Point
 import pickle
 from simulator import Sim
+import matplotlib.pyplot as plt
 
-
-MAX_EPISODES = 10000
+MAX_EPISODES = 2000
 MAX_EP_STEPS = 200
 X_OFFSET = 0.0
 Y_OFFSET = 0.0
@@ -26,6 +26,7 @@ A_DIM = 3
 A_BOUND = 10.0
 GOT_GOAL = -0.02
 TRAIN_POINT = 100000
+VAR_DECAY = 0.999995
 
 class Trainer(object):
     def __init__(self):
@@ -38,6 +39,11 @@ class Trainer(object):
         self.current_action = np.array([.0, .0, .0])
         self.done = True # if the episode is done
         self.var = 1.0
+        self.reward_record = list()
+        self.ep_record = list()
+        self.fig = plt.gcf()
+        self.fig.show()
+        self.fig.canvas.draw()
         print("Initialized DDPG")
 
         """ Setting communication"""
@@ -89,25 +95,21 @@ class Trainer(object):
                     s_ = s_[3:,:]
                     s_ = self.normalize_state(s_)
                     self.compute_reward(s[0,:], s_[1,:])
-                    self.ddpg.store_transition(s.reshape(6)[-S_DIM:], action, self.reward, s_.reshape(6)[-S_DIM:])
-
-                    if self.ddpg.pointer > TRAIN_POINT:
-                        #if (self.current_step % 10 == 0):
-                        #self.var *= 0.999998
-                        self.var = max(0.0,self.var-1.0/(MAX_EP_STEPS*MAX_EPISODES))
-                        self.ddpg.learn()
 
                     self.current_step += 1
-                    self.ep_reward += self.reward
 
                     if self.reward > GOT_GOAL:
-                        self.done = True
-                        self.current_step = 0
-                        self.current_ep += 1
-                        self.sample_target()
-                        #print "Target Reached"
+                        self.reward += 1.0
+                        self.ep_reward += self.reward
                         if self.current_ep% 10 ==0:
+                            self.reward_record.append(self.ep_reward / self.current_step)
+                            self.ep_record.append(self.current_ep)
+                            plt.plot(self.ep_record, self.reward_record)
+                            plt.ylim([-1.2,0.5])
+                            self.fig.canvas.draw()
+                            self.fig.savefig('learning.png')
                             print('\n')
+                            print "Target Reached"
                             print("Normalized action:")
                             print norm_a
                             print("Noise action:")
@@ -117,8 +119,12 @@ class Trainer(object):
                             print("Reward: %f" % self.reward)
                             print('Episode:', self.current_ep, ' Reward: %f' % self.ep_reward, 'Explore: %.3f' % self.var,)
                             print('*' * 40)
+                        self.done = True
+                        self.current_step = 0
+                        self.current_ep += 1
+                        self.sample_target()
                         self.ep_reward = 0
-                        self.ddpg.save_memory()
+                        #self.ddpg.save_memory()
                         #self.ddpg.save_model()
                         """
                         self.current_action = np.array([.0, .0, .0])
@@ -128,11 +134,17 @@ class Trainer(object):
                         """
 
                     else:
-                        self.done = False
+                        self.ep_reward += self.reward
                         if self.current_step == MAX_EP_STEPS:
-                            #print "Target Failed"
                             if self.current_ep % 10 ==0:
+                                self.reward_record.append(self.ep_reward / self.current_step)
+                                self.ep_record.append(self.current_ep)
+                                plt.plot(self.ep_record, self.reward_record)
+                                plt.ylim([-1.2, 0.5])
+                                self.fig.canvas.draw()
+                                self.fig.savefig('learning.png')
                                 print('\n')
+                                print "Target Failed"
                                 print("Normalized action:")
                                 print norm_a
                                 print("Noise action:")
@@ -142,11 +154,12 @@ class Trainer(object):
                                 print("Reward: %f" % self.reward)
                                 print('Episode:', self.current_ep, ' Reward: %f' % self.ep_reward, 'Explore: %.3f' % self.var,)
                                 print('*' * 40)
+                            self.done = False
                             self.current_step = 0
                             self.current_ep += 1
                             self.sample_target()
                             self.ep_reward = 0
-                            self.ddpg.save_memory()
+                            #self.ddpg.save_memory()
                             #self.ddpg.save_model()
                             """
                             self.current_action = np.array([.0, .0, .0])
@@ -154,7 +167,14 @@ class Trainer(object):
                                 = self.current_action[0], self.current_action[1], self.current_action[2]
                             self.run_action(self.action_V3)
                             """
+                    self.ddpg.store_transition(s.reshape(6)[-S_DIM:], action, self.reward, s_.reshape(6)[-S_DIM:])
+                    if self.ddpg.pointer > TRAIN_POINT:
+                        #if (self.current_step % 10 == 0):
+                        #self.var *= VAR_DECAY
+                        self.var = max(0.0,self.var-1.02/(MAX_EP_STEPS*MAX_EPISODES))
+                        self.ddpg.learn()
                     self.pub_state(s_)
+
             else:
                 p = self.sim.current_pose
                 s = np.vstack((p, self.target))
