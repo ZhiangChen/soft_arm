@@ -16,7 +16,7 @@ import pickle
 from simulator import Sim
 
 
-MAX_EPISODES = 1000
+MAX_EPISODES = 10000
 MAX_EP_STEPS = 200
 X_OFFSET = 0.0
 Y_OFFSET = 0.0
@@ -24,14 +24,14 @@ Z_OFFSET = 0.0
 S_DIM = 3
 A_DIM = 3
 A_BOUND = 10.0
-GOT_GOAL = -0.05
-TRAIN_POINT = 10000
+GOT_GOAL = -0.02
+TRAIN_POINT = 100000
 
 class Trainer(object):
     def __init__(self):
         """ Initializing DDPG """
         self.sim = Sim()
-        self.ddpg = DDPG(a_dim=A_DIM, s_dim=S_DIM, batch_size=1, memory_capacity=10000)
+        self.ddpg = DDPG(a_dim=A_DIM, s_dim=S_DIM, batch_size=64, memory_capacity=100000)
         self.ep_reward = 0.0
         self.current_ep = 0
         self.current_step = 0
@@ -93,7 +93,8 @@ class Trainer(object):
 
                     if self.ddpg.pointer > TRAIN_POINT:
                         #if (self.current_step % 10 == 0):
-                        self.var *= 0.99999
+                        #self.var *= 0.999998
+                        self.var = max(0.0,self.var-1.0/(MAX_EP_STEPS*MAX_EPISODES))
                         self.ddpg.learn()
 
                     self.current_step += 1
@@ -130,7 +131,7 @@ class Trainer(object):
                         self.done = False
                         if self.current_step == MAX_EP_STEPS:
                             #print "Target Failed"
-                            if self.current_ep % 50 ==0:
+                            if self.current_ep % 10 ==0:
                                 print('\n')
                                 print("Normalized action:")
                                 print norm_a
@@ -173,6 +174,7 @@ class Trainer(object):
 
                 self.compute_reward(s_[0, :], s_[1, :])
                 print('Explore: %.2f' % self.var,)
+                print("Reward: %f" % self.reward)
                 rospy.sleep(1)
                 #print
                 print self.ddpg.get_value(s.reshape(6)[-S_DIM:],norm_a,self.reward.reshape((-1,1)),s_.reshape(6)[-S_DIM:])
@@ -186,6 +188,7 @@ class Trainer(object):
                     self.sample_target()
                     print "Target Reached"
                     print("Episode %i Ended" % self.current_ep)
+                    print("Reward: %f" % self.reward)
                     print('Episode:', self.current_ep, ' Reward: %d' % self.ep_reward, 'Explore: %.2f' % self.var,)
                     print('*' * 40)
                     self.ep_reward = 0
@@ -201,8 +204,9 @@ class Trainer(object):
                 else:
                     self.done = False
                     self.current_step += 1
-                    if self.current_step == MAX_EP_STEPS:
+                    if self.current_step == 2:
                         print "Target Failed"
+                        print("Reward: %f" % self.reward)
                         print("Episode %i Ends" % self.current_ep)
                         print(
                             'Episode:', self.current_ep, ' Reward: %d' % self.ep_reward, 'Explore: %.2f' % self.var,)

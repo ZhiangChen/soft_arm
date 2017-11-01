@@ -24,7 +24,7 @@ class DDPG(object):
     - choose action
     - store transition
     """
-    def __init__(self, lr_a=0.0001, lr_c=0.001, gamma=0.99, tau=0.001, batch_size=16, a_dim=3, s_dim=31,
+    def __init__(self, lr_a=0.0001, lr_c=0.001, gamma=0.99, tau=0.001, batch_size=64, a_dim=3, s_dim=31,
                  memory_capacity=10000):
         """
         :param lr_a: learning rate of actor
@@ -156,8 +156,8 @@ class DDPG(object):
         print("Pointer location: %i" % self.pointer)
 
     def _build_a(self, s, scope, trainable):
-        hid_num1 = 20
-        hid_num2 = 10
+        hid_num1 = 200
+        hid_num2 = 50
         with tf.variable_scope(scope):
             F1_weights = tf.Variable(tf.truncated_normal([self.s_dim, hid_num1], stddev=1.0), trainable=trainable)
             F1_biases = tf.Variable(tf.constant(0.1, shape=[hid_num1]), trainable=trainable)
@@ -187,10 +187,13 @@ class DDPG(object):
             scaled_a = tf.layers.dense(hidden2, self.a_dim, activation=tf.nn.tanh, name='scaled_a', trainable=trainable, kernel_initializer=tf.contrib.layers.xavier_initializer())
             return scaled_a, reg_loss
 
+    def t_relu(self,x):
+        return tf.clip_by_value(x,-1.0,1.0)
+
 
     def _build_c(self, s, a, scope, trainable):
         hid_num1 = 200
-        hid_num2 = 10
+        hid_num2 = 50
         with tf.variable_scope(scope):
             concat = tf.concat([s, a], axis=1, name='concat')
 
@@ -217,7 +220,7 @@ class DDPG(object):
             #bn1 = tf.layers.batch_normalization(concat, axis=-1, training=self.is_training, name='bn1', trainable=trainable)
             hidden1 = tf.layers.dense(concat, hid_num1, activation=tf.nn.relu, name='fc1', trainable=trainable, kernel_initializer=tf.contrib.layers.xavier_initializer())
             #bn2 = tf.layers.batch_normalization(hidden1, axis=-1, training=self.is_training, name='bn2', trainable=trainable)
-            hidden2 = tf.layers.dense(hidden1, hid_num2, activation=tf.nn.sigmoid, name='fc2', trainable=trainable, kernel_initializer=tf.contrib.layers.xavier_initializer())
+            hidden2 = tf.layers.dense(hidden1, hid_num2, activation=tf.nn.tanh, name='fc2', trainable=trainable, kernel_initializer=tf.contrib.layers.xavier_initializer())
             q = tf.layers.dense(hidden2, 1, name='q', trainable=trainable, kernel_initializer=tf.contrib.layers.xavier_initializer())
             return q, reg_loss
 
