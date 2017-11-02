@@ -1,0 +1,16 @@
+MAX_EPISODES = 3000
+MAX_EP_STEPS = 200
+X_OFFSET = 0.0
+Y_OFFSET = 0.0
+Z_OFFSET = 0.0
+S_DIM = 3
+A_DIM = 3
+A_BOUND = 10.0
+GOT_GOAL = -0.05
+TRAIN_POINT = 100000
+VAR_DECAY = 0.9999999 #constant variance
+VAR_INIT = 0.1
+GAMMA = 0.5
+
+1. restore model and memory from model3000
+2. continue training

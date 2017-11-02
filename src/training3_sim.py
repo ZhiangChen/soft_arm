@@ -16,7 +16,7 @@ import pickle
 from simulator import Sim
 import matplotlib.pyplot as plt
 
-MAX_EPISODES = 1000 #3000
+MAX_EPISODES = 5
 MAX_EP_STEPS = 200
 X_OFFSET = 0.0
 Y_OFFSET = 0.0
@@ -26,14 +26,15 @@ A_DIM = 3
 A_BOUND = 10.0
 GOT_GOAL = -0.05
 TRAIN_POINT = 100000
-VAR_DECAY = 0.9999999 # 0.999995
+VAR_DECAY = 0.999998
 VAR_INIT = 0.1
+GAMMA = 0.1
 
 class Trainer(object):
     def __init__(self):
         """ Initializing DDPG """
         self.sim = Sim()
-        self.ddpg = DDPG(a_dim=A_DIM, s_dim=S_DIM, batch_size=10, memory_capacity=100000, gamma=0.5) #gamma=0.98
+        self.ddpg = DDPG(a_dim=A_DIM, s_dim=S_DIM, batch_size=10, memory_capacity=100000, gamma=GAMMA) #gamma=0.98
         self.ep_reward = 0.0
         self.current_ep = 0
         self.current_step = 0
