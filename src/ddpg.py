@@ -24,7 +24,7 @@ class DDPG(object):
     - choose action
     - store transition
     """
-    def __init__(self, lr_a=0.0001, lr_c=0.001, gamma=0.99, tau=0.001, batch_size=64, a_dim=3, s_dim=31,
+    def __init__(self, lr_a=0.001, lr_c=0.001, gamma=0.99, tau=0.001, batch_size=64, a_dim=3, s_dim=31,
                  memory_capacity=10000):
         """
         :param lr_a: learning rate of actor
@@ -188,7 +188,7 @@ class DDPG(object):
             hidden1 = tf.layers.dense(s, hid_num1, activation=tf.nn.relu, name='fc1', trainable=trainable,
                                       kernel_initializer=tf.contrib.layers.xavier_initializer())
             #bn2 = tf.layers.batch_normalization(hidden1, axis=-1, training=self.is_training, name='bn2', trainable=trainable)
-            hidden2 = tf.layers.dense(hidden1, hid_num2, activation=tf.tanh, name='fc2', trainable=trainable,
+            hidden2 = tf.layers.dense(hidden1, hid_num2, activation=tf.nn.relu, name='fc2', trainable=trainable,
                                       kernel_initializer=tf.contrib.layers.xavier_initializer())
             #scaled_a = tf.layers.dense(hidden2, self.a_dim, activation=tf.nn.tanh, name='scaled_a', trainable=trainable,
             #                           kernel_initializer=tf.random_uniform_initializer(-3e-3, 3e-3))
@@ -230,17 +230,9 @@ class DDPG(object):
             hidden1 = tf.layers.dense(concat, hid_num1, activation=tf.nn.relu, name='fc1', trainable=trainable,
                                       kernel_initializer=tf.contrib.layers.xavier_initializer())
             #bn2 = tf.layers.batch_normalization(hidden1, axis=-1, training=self.is_training, name='bn2', trainable=trainable)
-            hidden2 = tf.layers.dense(hidden1, hid_num2, activation=tf.nn.tanh, name='fc2', trainable=trainable,
+            hidden2 = tf.layers.dense(hidden1, hid_num2, activation=tf.nn.relu, name='fc2', trainable=trainable,
                                       kernel_initializer=tf.contrib.layers.xavier_initializer())
             q = tf.layers.dense(hidden2, 1, name='q', trainable=trainable,
                                 kernel_initializer=tf.random_uniform_initializer(-3e-3, 3e-3))
             #q = tf.layers.dense(hidden2, 1, name='q', trainable=trainable,kernel_initializer=tf.contrib.layers.xavier_initializer())
             return q
-
-    def rtanh(self, x):
-        if x>=1.0:
-            return 1.0
-        elif x<=-1.0:
-            return -1.0
-        else:
-            return x

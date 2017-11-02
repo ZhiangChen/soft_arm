@@ -16,7 +16,7 @@ import pickle
 from simulator import Sim
 import matplotlib.pyplot as plt
 
-MAX_EPISODES = 2000
+MAX_EPISODES = 1000 #3000
 MAX_EP_STEPS = 200
 X_OFFSET = 0.0
 Y_OFFSET = 0.0
@@ -24,21 +24,22 @@ Z_OFFSET = 0.0
 S_DIM = 3
 A_DIM = 3
 A_BOUND = 10.0
-GOT_GOAL = -0.02
+GOT_GOAL = -0.05
 TRAIN_POINT = 100000
-VAR_DECAY = 0.999995
+VAR_DECAY = 0.9999999 # 0.999995
+VAR_INIT = 0.1
 
 class Trainer(object):
     def __init__(self):
         """ Initializing DDPG """
         self.sim = Sim()
-        self.ddpg = DDPG(a_dim=A_DIM, s_dim=S_DIM, batch_size=64, memory_capacity=100000)
+        self.ddpg = DDPG(a_dim=A_DIM, s_dim=S_DIM, batch_size=10, memory_capacity=100000, gamma=0.5) #gamma=0.98
         self.ep_reward = 0.0
         self.current_ep = 0
         self.current_step = 0
         self.current_action = np.array([.0, .0, .0])
         self.done = True # if the episode is done
-        self.var = 1.0
+        self.var = VAR_INIT
         self.reward_record = list()
         self.ep_record = list()
         self.fig = plt.gcf()
@@ -50,6 +51,7 @@ class Trainer(object):
         self.pc = PC()
         self.pc.header.frame_id = 'world'
         self.pub = rospy.Publisher('normalized_state', PC, queue_size=10)
+        self.pub1 = rospy.Publisher('state', PC, queue_size=10)
         """
         self.sub = rospy.Subscriber('robot_pose', PA, self.callback, queue_size=1)
         self.pub = rospy.Publisher('normalized_state', PC, queue_size=10)
@@ -73,8 +75,8 @@ class Trainer(object):
         self.sample_target()
         print("Read target data")
 
-        #self.ddpg.restore_momery()
-        #self.ddpg.restore_model()
+        self.ddpg.restore_momery()
+        self.ddpg.restore_model()
 
         while not (rospy.is_shutdown()):
             if self.current_ep < MAX_EPISODES:
@@ -119,6 +121,8 @@ class Trainer(object):
                             print("Reward: %f" % self.reward)
                             print('Episode:', self.current_ep, ' Reward: %f' % self.ep_reward, 'Explore: %.3f' % self.var,)
                             print('*' * 40)
+                            self.ddpg.save_model()
+                            self.ddpg.save_memory()
                         self.done = True
                         self.current_step = 0
                         self.current_ep += 1
@@ -154,6 +158,8 @@ class Trainer(object):
                                 print("Reward: %f" % self.reward)
                                 print('Episode:', self.current_ep, ' Reward: %f' % self.ep_reward, 'Explore: %.3f' % self.var,)
                                 print('*' * 40)
+                                self.ddpg.save_model()
+                                self.ddpg.save_memory()
                             self.done = False
                             self.current_step = 0
                             self.current_ep += 1
@@ -171,7 +177,7 @@ class Trainer(object):
                     if self.ddpg.pointer > TRAIN_POINT:
                         #if (self.current_step % 10 == 0):
                         #self.var *= VAR_DECAY
-                        self.var = max(0.0,self.var-1.02/(MAX_EP_STEPS*MAX_EPISODES))
+                        #self.var = max(0.0,self.var-1.02/(MAX_EP_STEPS*MAX_EPISODES))
                         self.ddpg.learn()
                     self.pub_state(s_)
 
@@ -190,6 +196,7 @@ class Trainer(object):
                 p_ = self.sim.update_pose(self.current_action)
                 s_ = np.vstack((p_, self.target))
                 s_ = s_[3:,:]
+                print("Distance: %f" % np.linalg.norm(s_[0,:]-s_[1,:]))
                 s_ = self.normalize_state(s_)
 
                 self.compute_reward(s_[0, :], s_[1, :])
@@ -300,6 +307,16 @@ class Trainer(object):
             pts.append(pt)
         self.pc.points = pts
         self.pub.publish(self.pc)
+        pts = list()
+        for i in range(state.shape[0]):
+            pt = Point()
+            pt.x = state[i, 0] / 10.0
+            pt.y = state[i, 1] / 10.0
+            pt.z = state[i, 2] / 40.0 + 0.4
+            pts.append(pt)
+        self.pc.points = pts
+        self.pub1.publish(self.pc)
+
 
     def normalize_state(self,state):
         offset = np.array([0,0,0.4])
@@ -307,6 +324,15 @@ class Trainer(object):
         s = state - offset
         s = np.multiply(s, scaler)
         return s
+
+    def calculate_dist(self, state):
+        offset = np.array([0, 0, 0.4])
+        scaler = np.array([10, 10, 40])
+        s = np.multiply(state,1.0/scaler)
+        s += offset
+        return  np.linalg.norm(s)
+
+
 
 if __name__ == '__main__':
     rospy.init_node('trainer',anonymous=True)
