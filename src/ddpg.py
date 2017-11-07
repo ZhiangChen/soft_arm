@@ -143,13 +143,13 @@ class DDPG(object):
         #print("Saved memory")
         #print("Pointer location: " + str(self.pointer))
 
-    def save_model(self):
-        save_path = self.saver.save(self.sess, "./model/model.ckpt")
+    def save_model(self, loc = 'model'):
+        save_path = self.saver.save(self.sess, "./" + loc + "/model.ckpt")
         print("Model saved in file: %s" % save_path)
 
-    def restore_model(self):
+    def restore_model(self, loc = 'model'):
         print("Restored model")
-        self.saver.restore(self.sess, "./model/model.ckpt")
+        self.saver.restore(self.sess, "./" + loc + "/model.ckpt")
 
     def restore_momery(self):
         M = pickle.load(open('./data/memory.p', 'rb'))
