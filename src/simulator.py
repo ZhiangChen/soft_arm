@@ -96,7 +96,7 @@ if __name__ == '__main__':
     rospy.init_node('simulator', anonymous=True)
     try:
         sim = Sim()
-        a = np.array([4, 10, 14])
+        a = np.array([20, 0, 0])
         print a
         print sim.get_upper_action(a)[0]
         print sim.get_lower_action(a)[0]

@@ -15,18 +15,19 @@ from geometry_msgs.msg import Point
 import pickle
 from simulator import Sim
 import matplotlib.pyplot as plt
+from termcolor import colored
 
-MAX_EPISODES = 5
-MAX_EP_STEPS = 200
-X_OFFSET = 0.0
-Y_OFFSET = 0.0
-Z_OFFSET = 0.0
+MAX_EPISODES = 1
+MAX_EP_STEPS = 5
+X_OFFSET = 0.09408917
+Y_OFFSET = -0.30706903
+Z_OFFSET = 0.03982003
 S_DIM = 3
 A_DIM = 3
 A_BOUND = 10.0
 GOT_GOAL = -0.05
-TRAIN_POINT = 100000
-MEMORY_CAPACITY = 100000
+TRAIN_POINT = 100
+MEMORY_CAPACITY = 100
 VAR_DECAY = 0.999998
 VAR_INIT = 0.1
 GAMMA = 0.5
@@ -50,19 +51,6 @@ class Trainer(object):
         self.fig.canvas.draw()
         print("Initialized DDPG")
 
-        """ Setting communication"""
-        self.pc = PC()
-        self.pc.header.frame_id = 'world'
-        self.pub = rospy.Publisher('normalized_state', PC, queue_size=10)
-        self.pub1 = rospy.Publisher('state', PC, queue_size=10)
-
-        self.sub = rospy.Subscriber('Robot_0/pose', PS, self.callback, queue_size=1)
-        rospy.wait_for_service('airpress_control', timeout=5)
-        self.target_PS = PS()
-        self.action_V3 = Vector3()
-        self.updated = False # if s is updated
-        print("Initialized communication")
-
         """ Reading targets """
         """ The data should be w.r.t origin by base position """
         self.ends = pickle.load(open('./data/ends.p', 'rb'))
@@ -71,6 +59,20 @@ class Trainer(object):
         self.z_offset = Z_OFFSET
         self.sample_target()
         print("Read target data")
+
+        """ Setting communication"""
+        self.pc = PC()
+        self.pc.header.frame_id = 'world'
+        self.pub = rospy.Publisher('normalized_state', PC, queue_size=10)
+        self.pub1 = rospy.Publisher('state', PC, queue_size=10)
+
+        self.sub = rospy.Subscriber('Robot_1/pose', PS, self.callback, queue_size=1)
+        rospy.wait_for_service('airpress_control', timeout=5)
+        self.target_PS = PS()
+        self.action_V3 = Vector3()
+        self.updated = False # if s is updated
+        print("Initialized communication")
+
 
         #self.ddpg.restore_momery()
         self.ddpg.restore_model('model3000f')
@@ -86,7 +88,7 @@ class Trainer(object):
                     p = self.p.copy()
                     #p = self.sim.current_pose
                     s = np.vstack((p, self.target))
-                    s = s[3:,:]
+                    #s = s[3:,:]
                     s = self.normalize_state(s)
                     norm_a = self.ddpg.choose_action(s.reshape(6)[-S_DIM:])
                     noise_a = np.random.normal(norm_a, self.var)
@@ -104,7 +106,7 @@ class Trainer(object):
                     p_ = self.p.copy()
                     s_ = np.vstack((p_, self.target))
 
-                    s_ = s_[3:,:]
+                    #s_ = s_[3:,:]
                     s_ = self.normalize_state(s_)
                     self.compute_reward(s[0,:], s_[1,:])
 
@@ -197,7 +199,7 @@ class Trainer(object):
                     rospy.sleep(0.1)
                 p = self.p.copy()
                 s = np.vstack((p, self.target))
-                s = s[3:,:]
+                #s = s[3:,:]
                 s = self.normalize_state(s)
                 norm_a = self.ddpg.choose_action(s.reshape(6)[-S_DIM:])
                 self.current_action = norm_a * A_BOUND + A_BOUND
@@ -217,8 +219,9 @@ class Trainer(object):
                 p_ = self.p.copy()
 
                 s_ = np.vstack((p_, self.target))
-                s_ = s_[3:,:]
-                print("Distance: %f" % np.linalg.norm(s_[0,:]-s_[1,:]))
+                #s_ = s_[3:,:]
+                dist_p = "Distance: " + str(np.linalg.norm(s_[0,:]-s_[1,:]))
+                print colored(dist_p,'red')
                 s_ = self.normalize_state(s_)
 
                 self.compute_reward(s_[0, :], s_[1, :])
