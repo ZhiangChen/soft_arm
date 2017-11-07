@@ -56,7 +56,7 @@ class Trainer(object):
         self.pub = rospy.Publisher('normalized_state', PC, queue_size=10)
         self.pub1 = rospy.Publisher('state', PC, queue_size=10)
 
-        self.sub = rospy.Subscriber('Robot_1/pose', PS, self.callback, queue_size=1)
+        self.sub = rospy.Subscriber('Robot_0/pose', PS, self.callback, queue_size=1)
         rospy.wait_for_service('airpress_control', timeout=5)
         self.target_PS = PS()
         self.action_V3 = Vector3()
@@ -69,7 +69,6 @@ class Trainer(object):
         self.x_offset = X_OFFSET
         self.y_offset = Y_OFFSET
         self.z_offset = Z_OFFSET
-        self.scaler = 1/0.3
         self.sample_target()
         print("Read target data")
 
