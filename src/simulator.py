@@ -56,16 +56,20 @@ class Sim(object):
 
 
     def get_upper_action(self, action):
-        delta_actions = self.actions - action
-        x = delta_actions[:,0].tolist()
-        y = delta_actions[:,1].tolist()
-        z = delta_actions[:,2].tolist()
-        ax = min(i for i in x if i >= 0)
-        ay = min(i for i in y if i >= 0)
-        az = min(i for i in z if i >= 0)
-        a = action + np.array([ax, ay, az])
-        index = np.where(np.all(self.actions==a,axis=1)==True)[0][0]
-        return a, self.states[index]
+        try:
+            delta_actions = self.actions - action
+            x = delta_actions[:,0].tolist()
+            y = delta_actions[:,1].tolist()
+            z = delta_actions[:,2].tolist()
+            ax = min(i for i in x if i >= 0)
+            ay = min(i for i in y if i >= 0)
+            az = min(i for i in z if i >= 0)
+            a = action + np.array([ax, ay, az])
+            index = np.where(np.all(self.actions==a,axis=1)==True)[0][0]
+            return a, self.states[index]
+        except:
+            print "ACTION:"
+            print action
 
 
     def get_lower_action(self, action):
