@@ -3,7 +3,7 @@ import pickle
 
 ends = pickle.load(open('./data/ends.p', 'rb'))
 
-d_l = 0.01
+d_l = 0.003
 target = []
 
 for i in range(11):
@@ -16,7 +16,7 @@ pickle.dump( target, open( "./data/targets.p", "wb" ) )
 t = np.zeros((3,n_t))
 t[0] = target[:,0]*10
 t[1] = target[:,1]*10
-t[2] = (target[:,2]-0.43)*25
+t[2] = (target[:,2]-0.42)*30
 print np.max(t[0])
 print np.min(t[0])
 print np.max(t[1])

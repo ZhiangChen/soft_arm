@@ -16,7 +16,7 @@ import pickle
 from simulator import Sim
 import matplotlib.pyplot as plt
 
-MAX_EPISODES = 2000
+MAX_EPISODES = 2
 MAX_EP_STEPS = 200
 X_OFFSET = 0.0
 Y_OFFSET = 0.0
@@ -25,16 +25,17 @@ S_DIM = 3
 A_DIM = 3
 A_BOUND = 10.0
 GOT_GOAL = -0.05
-TRAIN_POINT = 100000
+TRAIN_POINT = 700
+MEMORY_NUM = 1000
 VAR_DECAY = 0.999998
-VAR_INIT = 0.5
-GAMMA = 0.98
+VAR_INIT = 0.25
+GAMMA = 0.3
 
 class Trainer(object):
     def __init__(self):
         """ Initializing DDPG """
         self.sim = Sim()
-        self.ddpg = DDPG(a_dim=A_DIM, s_dim=S_DIM, batch_size=64, memory_capacity=100000, gamma=GAMMA, lr_a=0.001) #gamma=0.98
+        self.ddpg = DDPG(a_dim=A_DIM, s_dim=S_DIM, batch_size=2, memory_capacity=MEMORY_NUM, gamma=GAMMA, lr_a=0.001) #gamma=0.98
         self.ep_reward = 0.0
         self.current_ep = 0
         self.current_step = 0
@@ -77,8 +78,9 @@ class Trainer(object):
         print("Read target data")
 
         #self.ddpg.restore_momery()
-        #self.ddpg.restore_model()
+        self.ddpg.restore_model()
 
+        memory_ep = np.ones((MAX_EP_STEPS, 3 + 3 + 1 + 3)) * -100
         while not (rospy.is_shutdown()):
             if self.current_ep < MAX_EPISODES:
                 if self.current_step < MAX_EP_STEPS:
@@ -101,6 +103,9 @@ class Trainer(object):
                     s_ = s_[3:,:]
                     s_ = self.normalize_state(s_)
                     self.compute_reward(s[0,:], s_[1,:])
+
+                    transition = np.hstack((s.reshape(6)[-S_DIM:], action, self.reward, s_.reshape(6)[-S_DIM:]))
+                    memory_ep[self.current_step] = transition
 
                     self.current_step += 1
 
@@ -132,8 +137,11 @@ class Trainer(object):
                         self.current_ep += 1
                         self.sample_target()
                         self.ep_reward = 0
-                        #self.ddpg.save_memory()
-                        #self.ddpg.save_model()
+
+                        greed_memory = memory_ep[np.argmax(memory_ep[:,6]), :]
+                        self.ddpg.store_transition(greed_memory[:3], greed_memory[3:6], greed_memory[6],
+                                                   greed_memory[-3:])
+                        memory_ep = np.ones((MAX_EP_STEPS, 3 + 3 + 1 + 3)) * -100
                         """
                         self.current_action = np.array([.0, .0, .0])
                         self.action_V3.x, self.action_V3.y, self.action_V3.z \
@@ -169,19 +177,21 @@ class Trainer(object):
                             self.current_ep += 1
                             self.sample_target()
                             self.ep_reward = 0
-                            #self.ddpg.save_memory()
-                            #self.ddpg.save_model()
+
+                            greed_memory = memory_ep[np.argmax(memory_ep[:,6]), :]
+                            self.ddpg.store_transition(greed_memory[:3], greed_memory[3:6], greed_memory[6],
+                                                       greed_memory[-3:])
+                            memory_ep = np.ones((MAX_EP_STEPS, 3 + 3 + 1 + 3)) * -100
                             """
                             self.current_action = np.array([.0, .0, .0])
                             self.action_V3.x, self.action_V3.y, self.action_V3.z \
                                 = self.current_action[0], self.current_action[1], self.current_action[2]
                             self.run_action(self.action_V3)
                             """
-                    self.ddpg.store_transition(s.reshape(6)[-S_DIM:], action, self.reward, s_.reshape(6)[-S_DIM:])
                     if self.ddpg.pointer > TRAIN_POINT:
                         #if (self.current_step % 10 == 0):
                         #self.var *= VAR_DECAY
-                        self.var = max(0.0,self.var-1.02/(MAX_EP_STEPS*MAX_EPISODES))
+                        #self.var = max(0.0,self.var-1.02/(MAX_EP_STEPS*MAX_EPISODES))
                         self.ddpg.learn()
                     self.pub_state(s_)
 
