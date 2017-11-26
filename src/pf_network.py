@@ -59,7 +59,7 @@ class PFN(object):
             with tf.variable_scope('loss'):
                 MSE = tf.losses.mean_squared_error(labels=self.A, predictions=self.a*self.bound + self.bound)
                 entropy = normal_dist.entropy()
-                loss = MSE - self.tau*(entropy - self.l2_var)
+                loss = MSE - self.tau*(entropy - 0.5*self.l2_var)
             self.train = tf.train.AdamOptimizer(self.lr).minimize(loss, var_list=self.params)
 
         self.saver = tf.train.Saver()

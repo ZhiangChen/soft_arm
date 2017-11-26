@@ -3,11 +3,14 @@ import pickle
 
 ends = pickle.load(open('./data/ends.p', 'rb'))
 
+norm = np.linalg.norm(ends, axis=1).reshape(-1,1)
+dirction = ends/norm
+
 d_l = 0.003
 target = []
 
 for i in range(11):
-    target.append(ends + i*d_l*ends)
+    target.append(ends + i*d_l*dirction)
 
 target = np.array(target).reshape(-1,3)
 n_t = target.shape[0]

@@ -18,7 +18,7 @@ import matplotlib.pyplot as plt
 
 np.random.seed(0)
 tf.set_random_seed(0)
-MAX_EPISODES = 5000
+MAX_EPISODES = 100
 MAX_EP_STEPS = 200
 X_OFFSET = 0.0
 Y_OFFSET = 0.0
@@ -26,10 +26,8 @@ Z_OFFSET = 0.0
 S_DIM = 3
 A_DIM = 3
 A_BOUND = 10.0
-GOT_GOAL = -0.05
-TRAIN_POINT = 1000
+TRAIN_POINT = 2000
 MEMORY_NUM = 2000
-ALPHA = 25.0
 
 
 class Trainer(object):
@@ -57,7 +55,7 @@ class Trainer(object):
 
         """ Reading targets """
         """ The data should be w.r.t origin by base position """
-        self.ends = pickle.load(open('./data/ends.p', 'rb'))
+        self.ends = pickle.load(open('./data/targets.p', 'rb'))
         self.x_offset = X_OFFSET
         self.y_offset = Y_OFFSET
         self.z_offset = Z_OFFSET
@@ -65,7 +63,7 @@ class Trainer(object):
         print("Read target data")
 
         self.pfn.restore_momery()
-        #self.pkn.restore_model()
+        self.pfn.restore_model()
 
         memory_ep = np.ones((MAX_EP_STEPS, 3 + 3 + 1 + 1)) * -100
         self.current_ep = 0
@@ -178,7 +176,7 @@ class Trainer(object):
 
 
     def compute_weighted_action(self, memory_ep):
-        sum = np.sum(memory_ep[:,-2])
+        sum = np.sum(memory_ep[:,-2]) + 1e-6
         try:
             w = memory_ep[:,-2]/sum
         except:
