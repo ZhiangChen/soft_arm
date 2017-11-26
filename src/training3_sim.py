@@ -16,7 +16,7 @@ import pickle
 from simulator import Sim
 import matplotlib.pyplot as plt
 
-MAX_EPISODES = 5
+MAX_EPISODES = 2000
 MAX_EP_STEPS = 200
 X_OFFSET = 0.0
 Y_OFFSET = 0.0
@@ -27,8 +27,8 @@ A_BOUND = 10.0
 GOT_GOAL = -0.05
 TRAIN_POINT = 100000
 VAR_DECAY = 0.999998
-VAR_INIT = 0.1
-GAMMA = 0.1
+VAR_INIT = 1.0
+GAMMA = 0.98
 
 class Trainer(object):
     def __init__(self):
@@ -76,8 +76,8 @@ class Trainer(object):
         self.sample_target()
         print("Read target data")
 
-        self.ddpg.restore_momery()
-        self.ddpg.restore_model()
+        #self.ddpg.restore_momery()
+        #self.ddpg.restore_model()
 
         while not (rospy.is_shutdown()):
             if self.current_ep < MAX_EPISODES:

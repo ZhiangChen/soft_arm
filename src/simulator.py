@@ -17,7 +17,7 @@ class Sim(object):
     - update state by linear interpolation
     """
     def __init__(self):
-        self.pub = rospy.Publisher('state_0', PC, queue_size=10)
+        self.pub = rospy.Publisher('state_sim', PC, queue_size=10)
         self.pc = PC()
         self.pc.header.frame_id = 'world'
 

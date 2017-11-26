@@ -78,7 +78,7 @@ class Trainer(object):
         print("Read target data")
 
         #self.ddpg.restore_momery()
-        self.ddpg.restore_model()
+        #self.ddpg.restore_model()
 
         memory_ep = np.ones((MAX_EP_STEPS, 3 + 3 + 1 + 3)) * -100
         while not (rospy.is_shutdown()):
