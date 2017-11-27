@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-Training on simulation
+pfn tracking real target
 """
 
 from pf_network import *
@@ -52,6 +52,13 @@ class Trainer(object):
         self.pub = rospy.Publisher('normalized_state', PC, queue_size=10)
         self.pub1 = rospy.Publisher('state', PC, queue_size=10)
 
+        self.sub = rospy.Subscriber('Robot_1/pose', PS, self.callback, queue_size=1)
+        rospy.wait_for_service('airpress_control', timeout=5)
+        self.target_PS = PS()
+        self.action_V3 = Vector3()
+        self.updated = False  # if s is updated
+        self.got_target = False
+        print("Initialized communication")
 
         """ Reading targets """
         """ The data should be w.r.t origin by base position """
@@ -62,13 +69,24 @@ class Trainer(object):
         self.sample_target()
         print("Read target data")
 
-        self.pfn.restore_momery()
-        self.pfn.restore_model()
+        #self.pfn.restore_momery()
+        self.pfn.restore_model('model_pfn')
 
         memory_ep = np.ones((MAX_EP_STEPS, 3 + 3 + 1 + 1)) * -100
         self.current_ep = 0
         self.current_step = 0
         while not (rospy.is_shutdown()):
+            self.updated = False
+            while (not self.updated) & (not rospy.is_shutdown()):
+                rospy.sleep(0.1)
+            real_target = self.real_target.copy()
+            s = self.normalize_state(real_target)
+            action, act_var = self.pfn.choose_action2(s)
+            self.action_V3.x, self.action_V3.y, self.action_V3.z \
+                = action[0], action[1], action[2]
+            self.run_action(self.action_V3)
+
+            '''
             if self.current_ep < MAX_EPISODES:
                 if self.current_step < MAX_EP_STEPS:
                     #rospy.sleep(0.5)
@@ -173,6 +191,24 @@ class Trainer(object):
                 self.pub_state(state)
                 rospy.sleep(1)
                 self.sample_target()
+                
+            '''
+
+
+    def callback(self, ps):
+        x = ps.pose.position.x - self.x_offset
+        y = ps.pose.position.y - self.y_offset
+        z = ps.pose.position.z - self.z_offset
+        self.real_target = np.array([x,y,z])
+        self.updated = True
+
+    def run_action(self,control):
+        try:
+            client = rospy.ServiceProxy('airpress_control', OneSeg)
+            resp = client(control)
+            return resp.status
+        except rospy.ServiceException, e:
+            print "Service call failed: %s"%e
 
 
     def compute_weighted_action(self, memory_ep):
