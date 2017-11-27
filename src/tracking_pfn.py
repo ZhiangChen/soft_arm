@@ -204,6 +204,7 @@ class Trainer(object):
 
     def run_action(self,control):
         try:
+            print control
             client = rospy.ServiceProxy('airpress_control', OneSeg)
             resp = client(control)
             return resp.status
