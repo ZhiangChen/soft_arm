@@ -19,6 +19,7 @@ class IniTest(object):
             self.updated2 = False
             while (not self.updated1) & (not self.updated2) & (not rospy.is_shutdown()):
                 rospy.sleep(0.1)
+            self.p2 = np.array([0.0917, -0.4439, 0.0390])
             print "Origin:" + str(self.p2)
             print "End_0:" + str(self.p1 - self.p2)
             print '\n'

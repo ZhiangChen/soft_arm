@@ -20,9 +20,9 @@ np.random.seed(0)
 tf.set_random_seed(0)
 MAX_EPISODES = 1
 MAX_EP_STEPS = 200
-X_OFFSET = 0.0
-Y_OFFSET = 0.0
-Z_OFFSET = 0.0
+X_OFFSET = 0.0917
+Y_OFFSET = -0.4439
+Z_OFFSET = 0.039
 S_DIM = 3
 A_DIM = 3
 A_BOUND = 10.0
@@ -85,6 +85,8 @@ class Trainer(object):
             self.action_V3.x, self.action_V3.y, self.action_V3.z \
                 = action[0], action[1], action[2]
             self.run_action(self.action_V3)
+            print '\n'
+            #rospy.sleep(1.0)
 
             '''
             if self.current_ep < MAX_EPISODES:

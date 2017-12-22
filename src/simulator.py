@@ -101,7 +101,7 @@ if __name__ == '__main__':
     try:
         sim = Sim()
         a = np.array([  7.31865952e-15,   2.00000000e+01,   2.00851345e+00])
-        #a = np.array([0, 0, 0])
+        a = np.array([0, 0, 0])
         print a
         print sim.get_upper_action(a)[0]
         print sim.get_lower_action(a)[0]
