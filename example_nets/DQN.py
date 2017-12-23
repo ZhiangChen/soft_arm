@@ -62,6 +62,7 @@ class DeepQNetwork:
             # tf.train.SummaryWriter soon be deprecated, use following
             tf.summary.FileWriter("logs/", self.sess.graph)
 
+        self.saver = tf.train.Saver()
         self.sess.run(tf.global_variables_initializer())
         self.cost_his = []
 
@@ -158,6 +159,14 @@ class DeepQNetwork:
         plt.ylabel('Cost')
         plt.xlabel('training steps')
         plt.show()
+
+    def save_model(self, loc='model'):
+        save_path = self.saver.save(self.sess, "./" + loc + "/model.ckpt")
+        print("Model saved in file: %s" % save_path)
+
+    def restore_model(self, loc='model'):
+        print("Restored model")
+        self.saver.restore(self.sess, "./" + loc + "/model.ckpt")
 
 if __name__ == '__main__':
     DQN = DeepQNetwork(3,4, output_graph=True)
