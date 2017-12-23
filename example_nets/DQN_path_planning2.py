@@ -24,17 +24,17 @@ def compute_reward(state, state_):
     dist_ = np.linalg.norm(point_ - goal)
     r = np.linalg.norm(point_ - obs)
     if r < R:
-        return -100.0, -1.0
+        return -100.0 -0.1, -1.0
 
     if dist_ < dist:
         if dist_ < DIST:
-            return 100.0, dist_
-        return 1.0, dist_
+            return 100.0 -0.1, dist_
+        return 1.0 -0.1, dist_
 
     if dist_ > dist:
-        return -1.0, dist_
+        return -1.0 -0.1, dist_
 
-    return 0.0, dist_
+    return 0.0 -0.1, dist_
 
 
 if __name__ == "__main__":
