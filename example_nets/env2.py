@@ -18,10 +18,6 @@ class Env(tk.Tk, object):
         self.action_space = ['f', 'b', 'l', 'r', 'fl', 'fr', 'bl', 'br']
         self.n_actions = len(self.action_space)
         self.n_features = 6
-        self.title('map')
-        self.geometry('{0}x{1}'.format(UNIT * 2, UNIT * 2))
-        self.canvas = tk.Canvas(self, bg='white',
-                                height=UNIT * 2, width=UNIT * 2)
 
 
     def build_map(self):
@@ -101,51 +97,13 @@ class Env(tk.Tk, object):
         self.state = np.array((self.obstacle, self.stop, self.current)).reshape(self.n_features)
         self.path = np.concatenate((self.path, self.current))
 
-    def setup_display(self):
-        self.o = self._draw_circle(self.obstacle, R, 'red')
-        self.s = self._draw_circle(self.start, 0.05, 'blue')
-        self.e = self._draw_circle(self.stop, 0.05, 'green')
-        self.p = self._draw_line(self.path)
-        self.canvas.pack()
-        self.render()
-
-    def display2D(self):
-        self.canvas.delete(self.o)
-        self.canvas.delete(self.s)
-        self.canvas.delete(self.e)
-        self.canvas.delete(self.p)
-
-        self.o = self._draw_circle(self.obstacle, R, 'red')
-        self.s = self._draw_circle(self.start, 0.05, 'blue')
-        self.e = self._draw_circle(self.stop, 0.05, 'green')
-        self.p = self._draw_line(self.path)
-
-        self.render()
-
-    def render(self):
-        self.update()
-
-    def _draw_circle(self, point, r, color):
-        p = point*UNIT+UNIT
-        R = int(r*UNIT)
-        x, y = p
-        x0 = x - R
-        y0 = y - R
-        x1 = x + R
-        y1 = y + R
-        return self.canvas.create_oval(x0, y0, x1, y1, fill = color)
-
-    def _draw_line(self, points):
-        p = (points*UNIT+UNIT).astype(int)
-        return self.canvas.create_line(*p)
-
 
 if __name__ == '__main__':
     map = Env()
     map.build_map()
     for i in range(100):
         print i
-        map.step('fl')
+        map.step('l')
         map.setup_display()
         map.display2D()
         time.sleep(1)

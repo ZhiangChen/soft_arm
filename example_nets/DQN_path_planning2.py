@@ -1,5 +1,5 @@
 from DQN import DeepQNetwork
-from env import Env
+from env2 import Env
 import numpy as np
 
 
