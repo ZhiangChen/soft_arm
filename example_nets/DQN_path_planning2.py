@@ -71,7 +71,7 @@ if __name__ == "__main__":
         if (episode+1)%100 == 0:
             print episode+1
             print value
-            if dist < DIST & dist>0:
+            if (dist < DIST) & (dist>0):
                 print "Got Target"
             if dist < 0:
                 print "Got Obstacle"
