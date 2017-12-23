@@ -14,7 +14,6 @@ RATE = 1.0
 
 class Env(tk.Tk, object):
     def __init__(self):
-        super(Env, self).__init__()
         self.action_space = ['f', 'b', 'l', 'r', 'fl', 'fr', 'bl', 'br']
         self.n_actions = len(self.action_space)
         self.n_features = 6
