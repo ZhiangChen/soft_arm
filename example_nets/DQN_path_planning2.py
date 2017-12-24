@@ -1,14 +1,16 @@
 from DQN import DeepQNetwork
-from env2 import Env
+from env import Env
 import numpy as np
 
 
 EPS = 300000
-STEP = 400
+STEP = 500
 action_space = ['f', 'b', 'l', 'r', 'fl', 'fr', 'bl', 'br']
-DIST = 0.01
-R = 0.5
+DIST = 0.025
+R = 0.4
+B = 0.2
 MEMORYCAPACITY = 400000
+PENALTY = -0.2
 
 def compute_reward(state, state_):
     """
@@ -24,17 +26,20 @@ def compute_reward(state, state_):
     dist_ = np.linalg.norm(point_ - goal)
     r = np.linalg.norm(point_ - obs)
     if r < R:
-        return -100.0 -0.1, -1.0
+        return -200.0 +PENALTY, -1.0
+
+    if r < R + B:
+        return -2.0 +PENALTY, dist_
 
     if dist_ < dist:
         if dist_ < DIST:
-            return 100.0 -0.1, dist_
-        return 1.0 -0.1, dist_
+            return 100.0 , dist_
+        return 1.0 +PENALTY, dist_
 
     if dist_ > dist:
-        return -1.0 -0.1, dist_
+        return -1.0 +PENALTY, dist_
 
-    return 0.0 -0.1, dist_
+    return 0.0 +PENALTY, dist_
 
 
 if __name__ == "__main__":
@@ -43,12 +48,13 @@ if __name__ == "__main__":
     RL = DeepQNetwork(env.n_actions, env.n_features,
                       learning_rate=0.0001,
                       reward_decay=0.9,
-                      e_greedy=0.9,
-                      replace_target_iter=1000,
+                      e_greedy=0.8,
+                      replace_target_iter=2000,
                       memory_size=MEMORYCAPACITY,
+                      batch_size=64
                       # output_graph=True
                       )
-
+    RL.restore_model()
     for episode in range(EPS):
         env.build_map()
         value = 0
@@ -69,6 +75,7 @@ if __name__ == "__main__":
                 RL.learn()
 
         if (episode+1)%100 == 0:
+            env.display2D()
             print episode+1
             print value
             if (dist < DIST) & (dist>0):
@@ -78,6 +85,9 @@ if __name__ == "__main__":
             if dist > DIST:
                 print "Failed Target"
             print '*'*40
+
+        if (episode + 1) % 10000 == 0:
+            RL.save_model()
 
     RL.save_model()
 

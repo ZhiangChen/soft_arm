@@ -7,10 +7,10 @@ else:
     import tkinter as tk
 
 UNIT = 100 # scale 1 to 100 pixels
-R = 0.5
-B = 0.1
-Epsilon = 0.1
-RATE = 1.0
+R = 0.4
+B = 0.2
+Epsilon = 0.05
+RATE = 3.0
 
 class Env(tk.Tk, object):
     def __init__(self):
@@ -22,6 +22,8 @@ class Env(tk.Tk, object):
         self.geometry('{0}x{1}'.format(UNIT * 2, UNIT * 2))
         self.canvas = tk.Canvas(self, bg='white',
                                 height=UNIT * 2, width=UNIT * 2)
+        self.build_map()
+        self._setup_display()
 
 
     def build_map(self):
@@ -101,7 +103,7 @@ class Env(tk.Tk, object):
         self.state = np.array((self.obstacle, self.stop, self.current)).reshape(self.n_features)
         self.path = np.concatenate((self.path, self.current))
 
-    def setup_display(self):
+    def _setup_display(self):
         self.o = self._draw_circle(self.obstacle, R, 'red')
         self.s = self._draw_circle(self.start, 0.05, 'blue')
         self.e = self._draw_circle(self.stop, 0.05, 'green')
