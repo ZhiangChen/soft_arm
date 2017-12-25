@@ -4,12 +4,12 @@ import numpy as np
 
 
 EPS = 300000
-STEP = 500
+STEP = 600
 action_space = ['f', 'b', 'l', 'r', 'fl', 'fr', 'bl', 'br']
 DIST = 0.025
 R = 0.4
 B = 0.2
-MEMORYCAPACITY = 400000
+MEMORYCAPACITY = 100000
 PENALTY = -0.2
 
 def compute_reward(state, state_):
@@ -48,7 +48,7 @@ if __name__ == "__main__":
     RL = DeepQNetwork(env.n_actions, env.n_features,
                       learning_rate=0.0001,
                       reward_decay=0.9,
-                      e_greedy=0.8,
+                      e_greedy=0.75,
                       replace_target_iter=2000,
                       memory_size=MEMORYCAPACITY,
                       batch_size=64
