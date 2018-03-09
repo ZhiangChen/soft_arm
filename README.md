@@ -1,3 +1,6 @@
+# Soft Arm Control via Deep Reinforcement Learning
+The soft arm robot can learn to track a target within its reachable space.[[video]](https://www.youtube.com/watch?v=NWhmce04CdI&list=PLQFQ6M344AWfH7qtK-xf0zY1FP0QjG_QW)
+
 
 ### 1. example_nets
 Some usage examples of neural networks that might be used
